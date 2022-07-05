@@ -1,0 +1,17 @@
+1. To get the installed objects for this installation run:
+    kubectl get all --namespace {{ .Release.Namespace }} -l release={{ .Release.Name }} -l chart={{ .Chart.Name }} -o wide
+
+2. Watch all cluster members come up.
+  $ kubectl get pods --namespace {{ .Release.Namespace }} -w
+
+Note: For Terms of Use see: https://git.daimler.com/i3/i3-access/blob/master/README.md
+
+ _____ ____    __  __  ____  _____   _____
+|_   _|___ \  |  \/  |/ __ \|  __ \ / ____|
+  | |   __) | | \  / | |  | | |__) | (___
+  | |  |__ <  | |\/| | |  | |  ___/ \___ \
+ _| |_ ___) | | |  | | |__| | |     ____) |
+|_____|____/  |_|  |_|\____/|_|    |_____/
+
+
+„Ein Leben ohne Mops ist möglich, aber sinnlos“

@@ -1,0 +1,20 @@
+#
+# NetworkPolicy Declaration
+#
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ .Values.resourceName }}-access
+  namespace: {{ .Release.Namespace }}
+  labels:
+    i3-product: i3-access
+    i3-version: {{ .Chart.Version }}
+    {{- include "texService.defaultLabels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "texService.defaultLabels" . | nindent 6 }}
+  ingress:
+  - ports:
+    - port: 8090
+      protocol: TCP

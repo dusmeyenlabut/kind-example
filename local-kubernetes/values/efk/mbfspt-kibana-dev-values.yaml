@@ -1,0 +1,47 @@
+---
+elasticsearchHosts: "http://elasticsearch-master-headless:9200"
+
+replicas: 1
+
+#image: "registry.app.corpintra.net/mbfs.powertrain/kibana"
+imageTag: "7.10.2"
+imagePullPolicy: "IfNotPresent"
+
+resources:
+  requests:
+    cpu: "256m"
+    memory: "256Mi"
+  limits:
+    cpu: "512m"
+    memory: "750Mi"
+
+protocol: http
+
+serverHost: "0.0.0.0"
+
+healthCheckPath: "/kibana/app/kibana"
+
+# Allows you to add any config files in /usr/share/kibana/config/
+# such as kibana.yml
+kibanaConfig: 
+   kibana.yml: |
+      server.basePath: /kibana
+      server.rewriteBasePath: true
+
+
+ingress:
+  enabled: true
+  
+  annotations: 
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  hosts:
+    - host: st1.mo360mes-k.app.corpintra.net
+      paths:
+        - path: /kibana
+
+
+
+# imagePullSecrets:
+#  - name: harbor-pullsecret
+

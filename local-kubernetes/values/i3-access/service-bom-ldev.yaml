@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-bom-service
+spec:
+  selector:
+    k8s-app: dockerhost
+  clusterIP: None
+  ports:
+    - port: 80
+      targetPort: 9004
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bom-ingress
+  annotations:
+    kubernetes.io/ingress.class: "traefik-i3-access"
+spec:
+  rules:
+    - host: st1.mo360mes.localhost
+      http:
+        paths:
+          - pathType: Prefix
+            path: /bom
+            backend:
+              service:
+                name: external-bom-service
+                port:
+                  number: 80

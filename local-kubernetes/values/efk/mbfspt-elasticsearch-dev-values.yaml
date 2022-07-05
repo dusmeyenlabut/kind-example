@@ -1,0 +1,67 @@
+---
+clusterName: "elasticsearch"
+nodeGroup: "master"
+
+roles:
+  master: "true"
+  ingest: "true"
+  data: "true"
+  remote_cluster_client: "true"
+
+
+replicas: 1
+minimumMasterNodes: 1
+
+
+# Allows you to add any config files in /usr/share/elasticsearch/config/
+# such as elasticsearch.yml and log4j2.properties
+esConfig: 
+ elasticsearch.yml: |
+   http.cors.enabled: true
+   http.cors.allow-origin: "*"
+
+
+
+#image: "registry.app.corpintra.net/mbfs.powertrain/elasticsearch"
+imageTag: "7.10.2"
+imagePullPolicy: "IfNotPresent"
+
+
+esJavaOpts: "-Xmx1g -Xms1g"
+
+resources:
+  limits:
+    cpu: 512m
+    memory: 2Gi
+  requests:
+    cpu: 200m
+    memory: 1Gi
+
+
+
+volumeClaimTemplate:
+  accessModes: [ "ReadWriteOnce" ]
+  #storageClassName: nfs-client
+  resources:
+    requests:
+      storage: 30Gi
+
+
+
+protocol: http
+httpPort: 9200
+transportPort: 9300
+
+
+
+
+# imagePullSecrets: 
+# - name: harbor-pullsecret
+
+sysctlInitContainer:
+  enabled: true
+
+
+
+
+

@@ -1,0 +1,38 @@
+
+{{- define "migrate.texService" -}}
+    {{- if empty .Values.global.oidcProviderPreset -}}
+        {{- if .Values.global.configuredOp -}}
+            {{- set .Values.global "oidcProviderPreset" .Values.global.configuredOp -}}
+        {{- end -}}
+    {{- end -}}
+    {{- if empty .Values.global.oidcProvider.clientCredentials.authCode.clientID -}}
+        {{- if .Values.global.oidcProvider.clientId -}}
+            {{- set .Values.global.oidcProvider.clientCredentials.authCode "clientID" .Values.global.oidcProvider.clientId -}}
+        {{- end -}}
+    {{- end -}}
+    {{- if not .Values.global.oidcProvider.clientCredentials.authCode.clientSecret -}}
+        {{- if .Values.global.oidcProvider.clientSecret -}}
+            {{- set .Values.global.oidcProvider.clientCredentials.authCode "clientSecret" .Values.global.oidcProvider.clientSecret -}}
+        {{- end -}}
+    {{- end -}}
+    {{- if empty .Values.global.oidcProvider.clientCredentials.tokenIntrospection.clientID -}}
+        {{- if .Values.global.oidcProvider.introspectionClientId -}}
+            {{- set .Values.global.oidcProvider.clientCredentials.tokenIntrospection "clientID" .Values.global.oidcProvider.introspectionClientId -}}
+        {{- end -}}
+    {{- end -}}
+    {{- if empty .Values.global.oidcProvider.clientCredentials.tokenIntrospection.clientSecret -}}
+        {{- if .Values.global.oidcProvider.introspectionClientSecret -}}
+            {{- set .Values.global.oidcProvider.clientCredentials.tokenIntrospection "clientSecret" .Values.global.oidcProvider.introspectionClientSecret -}}
+        {{- end -}}
+    {{- end -}}
+    {{- if empty .Values.global.tokenExchange.credentials.clientID -}}
+        {{- if .Values.global.tokenExchange.clientId -}}
+            {{- set .Values.global.tokenExchange.credentials "clientID" .Values.global.tokenExchange.clientId -}}
+        {{- end -}}
+    {{- end -}}
+    {{- if empty .Values.global.tokenExchange.credentials.clientSecret -}}
+        {{- if .Values.global.tokenExchange.clientSecret -}}
+            {{- set .Values.global.tokenExchange.credentials "clientSecret" .Values.global.tokenExchange.clientSecret -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}

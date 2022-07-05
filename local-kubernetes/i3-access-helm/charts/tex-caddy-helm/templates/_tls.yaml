@@ -1,0 +1,66 @@
+{{- define "tls.volumes" -}}
+  {{- if .Values.inbound.tls.enabled -}}
+  {{- if .Values.texCaddy.caddyfile.tls.enabled -}}
+  {{- if and .Values.inbound.tls.certificate.fromBase64.cert .Values.inbound.tls.certificate.fromBase64.key -}}
+- name: {{ .Values.resourceName }}-ingress-cert
+  secret:
+    secretName: {{ .Values.resourceName }}-ingress-cert
+  {{- else if not (empty .Values.inbound.tls.certificate.fromSecret) -}}
+- name: {{ .Values.resourceName }}-ingress-cert
+  secret:
+    secretName: {{ .Values.inbound.tls.certificate.fromSecret }}
+  {{- end -}}
+  {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- define "tls.volumeMounts" -}}
+  {{- if .Values.inbound.tls.enabled -}}
+  {{- if .Values.texCaddy.caddyfile.tls.enabled -}}
+  {{- if or (and .Values.inbound.tls.certificate.fromBase64.cert .Values.inbound.tls.certificate.fromBase64.key) (not (empty .Values.inbound.tls.certificate.fromSecret)) -}}
+- name: {{ .Values.resourceName }}-ingress-cert
+  mountPath: /etc/ingress-cert
+  readOnly: true
+  {{- end -}}
+  {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- define "tls.secret" -}}
+  {{- if .Values.inbound.tls.enabled -}}
+  {{- if and .Values.inbound.tls.certificate.fromBase64.cert .Values.inbound.tls.certificate.fromBase64.key -}}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.resourceName }}-ingress-cert
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+type: kubernetes.io/tls
+data:
+  tls.crt: {{ .Values.inbound.tls.certificate.fromBase64.cert | quote }}
+  tls.key: {{ .Values.inbound.tls.certificate.fromBase64.key | quote }}
+  {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- define "tls.ingress" -}}
+  {{- if .Values.inbound.tls.enabled -}}
+  {{- if .Values.inbound.ingress.enableTLS -}}
+tls:
+  - hosts:
+    {{- range .Values.inbound.ingress.rules }}
+      {{- if .host }}
+      - {{ .host }}
+      {{- end }}
+    {{- end }}
+    {{- if and .Values.inbound.tls.certificate.fromBase64.cert .Values.inbound.tls.certificate.fromBase64.key }}
+    secretName: {{ .Values.resourceName }}-ingress-cert
+    {{- else if not (empty .Values.inbound.tls.certificate.fromSecret) }}
+    secretName: {{ .Values.inbound.tls.certificate.fromSecret }}
+    {{- else -}}
+    {{- required "Please provide TLS certificates either via `tex-caddy-helm.inbound.tls.certificate.fromBase64` or `tex-caddy-helm.inbound.tls.certificate.fromSecret`" .Values.inbound.tls.certificate.fromSecret -}}
+    {{- end -}}
+  {{- end -}}
+  {{- end -}}
+{{- end -}}

@@ -1,0 +1,63 @@
+{{- define "volumes.traefik" -}}
+{{- if .Values.traefik.enabled -}}
+- name: {{ .Values.resourceName }}-traefik-config
+  configMap:
+    name: {{ .Values.resourceName }}-traefik-config
+{{- end -}}
+{{- end -}}
+
+{{- define "containers.traefik" -}}
+{{- if .Values.traefik.enabled -}}
+- name: traefik
+  image: {{ printf "%s:%s" .Values.traefik.image.repository .Values.traefik.image.tag | quote }}
+  lifecycle:
+    {{- toYaml .Values.traefik.lifecycle | nindent 4 }}
+  args:
+    - --configFile=/config/traefik.toml
+  imagePullPolicy: {{ .Values.traefik.image.pullPolicy }}
+  ports:
+    {{- if .Values.global.metrics.enabled }}
+    - name: metrics-traefik
+      containerPort: 8081
+      protocol: TCP
+    {{- end }}
+    {{- if .Values.traefik.dashboard.enabled }}
+    - name: web
+      containerPort: 8080
+      protocol: TCP
+    {{- end }}
+  volumeMounts:
+    - name: {{ .Values.resourceName }}-traefik-config
+      mountPath: /config
+      readOnly: true
+    {{- if .Values.extra.volumeMounts  }}
+    {{- toYaml .Values.extra.volumeMounts | trim | nindent 4 }}
+    {{- end }}
+  readinessProbe:
+    {{- if .Values.traefik.probes.readiness }}
+    {{- toYaml .Values.traefik.probes.readiness | nindent 4 }}
+    {{- else }}
+    httpGet:
+      path: /ping
+      port: 8000
+    {{- end }}
+  livenessProbe:
+    {{- if .Values.traefik.probes.liveness }}
+    {{- toYaml .Values.traefik.probes.liveness | nindent 4 }}
+    {{- else }}
+    httpGet:
+      path: /ping
+      port: 8000
+    initialDelaySeconds: 10
+    timeoutSeconds: 5
+    {{- end }}
+  {{- if .Values.traefik.securityContext }}
+  securityContext:
+    {{- toYaml .Values.traefik.securityContext | nindent 4 }}
+  {{- end }}
+  {{- if .Values.traefik.resources }}
+  resources:
+    {{- toYaml .Values.traefik.resources | nindent 4 }}
+  {{- end -}}
+{{- end -}}
+{{- end -}}

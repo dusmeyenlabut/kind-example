@@ -1,0 +1,23 @@
+global:
+  imageRegistry: ""
+  ## E.g.
+  ## imagePullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  imagePullSecrets: []
+
+  postgresql:
+    postgresqlDatabase: "templateDb"
+    postgresqlUsername: "mbfsadmin"
+    postgresqlPassword: "Passw0rd1!!!"
+  
+initdbScripts: 
+  my_init_script.sql: |
+    CREATE schema template;
+    CREATE TABLE template.template_table (dummy INTEGER NOT NULL PRIMARY KEY); 
+    );
+
+
+service:
+  type: NodePort
+  nodePort: 30673

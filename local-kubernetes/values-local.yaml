@@ -1,0 +1,16 @@
+mops:
+  name: "mops"
+  replicas: 1
+  logLevel: INFO
+  basePath: /mock-op
+  dozyUser: dozy.user
+
+ingress:
+  enabled: true
+  host: st1.mo360mes.localhost
+  path: /mock-op
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+  tls:
+    enabled: false
+    secretName: "tex-caddy-ingress-cert"

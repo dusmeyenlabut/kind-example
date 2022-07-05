@@ -1,0 +1,10 @@
+apiVersion: v2
+description: A lightweight backend application for JWT validation and output.
+home: https://git.daimler.com/i3/i3-access
+maintainers:
+- email: i3.consulting@mercedes-benz.com
+  name: i3
+  url: https://git.daimler.com/i3/i3-access/blob/master/echo-jwt
+name: echo-jwt-helm
+type: application
+version: 4.8.0

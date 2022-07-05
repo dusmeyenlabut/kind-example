@@ -1,0 +1,123 @@
+##
+# Configuration section for global values (those values are the same for i3-tex-caddy and i3-tex-service)
+global:
+  # Configuration for token exchange connection between i3-tex-caddy and i3-tex-service
+  tokenExchange:
+    credentials:
+      # Client id for basic authentication of token exchange clients. This value is mandatory.
+      clientID: "username"
+      # Client secret for basic authentication of token exchange clients. This value is mandatory.
+      clientSecret: "password"
+  oidcProvider:
+    clientCredentials:
+      authCode:
+        # Client id for the connection to the OIDC provider. This value is mandatory.
+        clientID: client_id
+        # Client secret for the connection to the OIDC provider. This value is mandatory.
+        clientSecret: client_secret
+      tokenIntrospection:
+        # Client id for the introspection endpoint of the OIDC provider
+        clientID: introspection_client_id
+        # Client secret for the introspection endpoint of the OIDC provider
+        clientSecret: introspection_client_secret
+    endpoints:
+      authorization:
+        url: "http://st1.mo360mes.localhost/mock-op/authorization.oauth2"
+      token:
+        url: "http://mops/mock-op/token.oauth2"
+      introspection:
+        url: "http://mops/mock-op/introspect.oauth2"
+      revocation:
+        url: "http://mops/mock-op/revoke_token.oauth2"
+      jwks:
+        url: "http://mops/mock-op/JWKS"
+        issuer: "http://mops"
+      logout:
+        url: "http://st1.mo360mes.localhost/mock-op/startSLO.ping"
+        additionalQueryParams:
+          client_id: ""
+          post_logout_redirect_uri: ""
+      userinfo:
+        url: "http://mops/mock-op/userinfo.openid"
+
+##
+# Configuration section for tex-caddy helm subchart.
+# We've listed mandatory and most commonly used properties.
+# For configuration details see values.yaml of tex-caddy (charts/tex-caddy-helm/values.yaml)
+tex-caddy-helm:
+  texCaddy:
+    routes:
+      applicationBaseUrl: "http://st1.mo360mes.localhost"
+
+# Configuration section for tex-service helm subchart.
+# We've listed mandatory and most commonly used properties.
+# For configuration details see values.yaml of tex-service (charts/tex-service-helm/values.yaml)
+tex-service-helm:
+  texService:
+    jwt:
+      issuer: http://tex-service
+    preconfiguredMappers:
+      introspection:
+        enabled: true
+        conditions:
+          - key: "client_id"
+            values: [ "client_id" ]
+          - key: "aud"
+            values: [ "client_id" ]
+      userinfo:
+        enabled: true
+        preconditions:
+          - key: "scope"
+            expression: "{{ splitList \" \" . | has \"openid\" }}"
+          - key: "sub"
+            expression: "{{ not (empty .) }}"
+        mappings:
+          - source: name
+            target: name
+          - source: given_name
+            target: given_name
+          - source: family_name
+            target: family_name
+          - source: email
+            target: email
+          - source: authorization_group
+            target: authorization_group
+          - source: entitlement_group
+            target: entitlement_group
+          - source: sub
+            target: upn
+    #cache:
+    #  disabled: true
+    mappers:
+      - name: "static mapper"
+        url: ""
+        mappings:
+          - value: "AUTH_GROUP"
+            target: authorization_group
+      - name: "dynamic mapper"
+        url: ""
+        mappings:
+          - values:
+              - MO360MES.e_BOM_Stueckliste_Create
+              - MO360MES.e_BOM_Stueckliste_Read
+              - MO360MES.e_BOM_Stueckliste_Update
+              - MO360MES.e_BOM_Stueckliste_Delete
+              - MO360MES.e_BOM_Buendel_Create
+              - MO360MES.e_BOM_Buendel_Read
+              - MO360MES.e_BOM_Buendel_Update
+              - MO360MES.e_BOM_Buendel_Delete
+              - MO360MES.e_PMD_Stammdaten_Create
+              - MO360MES.e_PMD_Stammdaten_Read
+              - MO360MES.e_PMD_Stammdaten_Update
+              - MO360MES.e_PMD_Stammdaten_Delete
+              - MO360MES.e_LNC_Konfiguration_Create
+              - MO360MES.e_LNC_Konfiguration_Read
+              - MO360MES.e_LNC_Konfiguration_Update
+              - MO360MES.e_LNC_Konfiguration_Delete
+              - MO360MES.e_LNC_Konfiguration_Activate
+              - MO360MES.e_LNC_Konfiguration_Derive
+              - MO360MES.e_GBL_User
+              - MO360MES.e_REP_Export_Download
+            target: entitlement_group
+            condition: '{{ contains "super" .sub }}'
+            append: true

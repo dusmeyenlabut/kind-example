@@ -1,0 +1,19 @@
+{{- if .Values.podDisruptionBudgets.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Values.resourceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+spec:
+{{- if .Values.podDisruptionBudgets.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudgets.minAvailable}}
+{{end}}
+{{- if .Values.podDisruptionBudgets.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudgets.maxUnavailable}}
+{{end}}
+  selector:
+    matchLabels:
+      {{- include "texCaddy.defaultLabels" . | nindent 6 }}
+{{- end}}

@@ -1,0 +1,31 @@
+additionalLabels:
+  namespace: st1-mo360mes-dev
+  env: dev
+
+resources:
+  limits:
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+
+imagePullSecrets:
+  - name: harbor-pullsecret
+
+ingress:
+  annotations:
+    kubernetes.io/ingress.class: "traefik-i3-access"
+  hosts:
+    - host: st1.mo360mes-dev.app.corpintra.net
+      http:
+        paths:
+          - path: /ui
+            pathType: Prefix
+            backend:
+              service:
+                name: mbfspowertrain-ui
+                port:
+                  number: 80

@@ -1,0 +1,1080 @@
+# chartVersion: 4.8.0
+
+##########################################
+######   STOP, JUST ONE SEC !!!   ########
+##########################################
+#
+# If you are about to use THIS file to get started with your customized values,
+# please think twice. The much smaller my-values.yaml is intended to be
+# the starting point in most cases. 
+
+
+# --begin global--
+##
+# Configuration section for global values (those values are the same for i3-tex-caddy and i3-tex-service)
+global:
+  # Configure tracing for all components. By default tracing is enabled, but no tracing backend is configured. So traceIDs are logged to trace requests.
+  # See here for configuration details: https://github.com/jaegertracing/jaeger-client-go#environment-variables
+  # The defaults below disable sending traces to any agent but enable trace-ids to be printed in log output.
+  tracing:
+    agentHost: "localhost"
+    agentPort: "6831"
+    samplerType: "const"
+    samplerParam: "0"
+  # Enables metrics endpoints for all components to be scraped by Prometheus
+  metrics:
+    enabled: true
+  # Specify logging for all components.
+  logging:
+    # Specify logLevel from one of [info, debug, error, fatal]
+    level: info
+    # Specify either logFormat `json`, `console` or leave blank
+    format: console
+  # Specify a preset for the OIDC provider you want to configure i3-access for.
+  # No preset means you have to provide all endpoints manually (can be used for custom OIDC providers).
+  # If you specify a property that is filled by the preset, your value is used instead.
+  # A valid preset must be one of ...:
+  # - gased-prod                # GAS-OIDC cloud login
+  # - gased-int                 # GAS-OIDC cloud login
+  # - ciam-emea-int             # CIAM NextGen internet EMEA
+  # - ciam-emea-preprod         # CIAM NextGen internet EMEA
+  # - ciam-emea-prod            # CIAM NextGen internet EMEA
+  # - ciam-cn-int               # CIAM NextGen internet China
+  # - ciam-cn-preprod           # CIAM NextGen internet China
+  # - ciam-cn-prod              # CIAM NextGen internet China
+  # - ciam-emea-int-intra       # CIAM NextGen intranet EMEA
+  # - ciam-emea-preprod-intra   # CIAM NextGen intranet EMEA
+  # - ciam-emea-prod-intra      # CIAM NextGen intranet EMEA
+  # - ciam-cn-int-intra         # CIAM NextGen intranet China
+  # - ciam-cn-preprod-intra     # CIAM NextGen intranet China
+  # - ciam-cn-prod-intra        # CIAM NextGen intranet China
+  oidcProviderPreset: ""
+  # OIDC provider configuration
+  oidcProvider:
+    clientCredentials:
+      # Credentials for the connection to the OIDC provider.
+      # These properties are mandatory.
+      authCode:
+        clientID:
+        clientSecret:
+      # Credentials for the introspection endpoint of the OIDC provider
+      # These properties are mandatory.
+      tokenIntrospection:
+        clientID:
+        clientSecret:
+    # Configuration of the OIDC provider's endpoints
+    endpoints:
+      # Configuration for the OAuth Authorization Endpoint
+      authorization:
+        # Define the URL of the authorization endpoint.
+        # e.g. https://sso-int.e.corpintra.net/as/authorization.oauth2
+        # This property is already set when specifying a preset.
+        url:
+        # Defines the OP Redirect URL after a successful login process, which is required to handle the next steps in i3-tex-caddy for the token exchange.
+        # The path must match the tex-caddy login endpoint which is by default set to "/login" and SHOULD NOT be changed if not really required.
+        # This value is mandatory.
+        # Since this value goes directly to tex-caddy's Caddyfile, it can be used with Caddy placeholders (https://caddyserver.com/docs/caddyfile/concepts#placeholders)
+        # e.g. "https://caas-int.app.corpintra.net/login" or "https://{hostport}/login"
+        # This value is mandatory.
+        redirectUrl:
+        # A list of AcrValues which will be validated against the acr claim of the IdToken.
+        # Only required if `additionalQueryParams.acr_values` is defined.
+        acceptedAcrValues: []
+        # Modify the list of scopes which are requested from the OIDC Provider. All scopes must be configured in the Approval Tool.
+        # Example with additional scopes: ["openid", "profile", "email", "offline_access", "entitlement_group", "authorization_group"]
+        scopes:  ["openid", "profile", "email", "offline_access"]
+        # Specify additional query parameters that are appended to the authorization URL
+        additionalQueryParams:
+          # Callback Url when using CIAM
+          # Example: "http://myurl.com/ciam-callback"
+          callback_uri:
+          # Defines the level of authentication.
+          # GAS-OIDC:
+          # Leave it empty because it is pre-defined in the IAM Approval Tool.
+          # If you have selected "Application Controlled" in the IAM Approval Tool, please see https://pages.git.daimler.com/IAM/GAS-OIDC-Integration_Guide/docs/guide/authentication/?query=acr_values#acr for more details.
+          # CIAM Next Generation:
+          # See CIAM OIDC Integration Guide, chapter "Authentication" > "acr_value" for more details.
+          acr_values:
+          # OPTIONAL login hint for CIAM-NG. Hint to the Authorization Server about the login identifier the End-User might use to log in (if necessary).
+          # See CIAM OIDC Integration Guide, chapter "Authentication" for more details.
+          login_hint:
+          # OPTIONAL touchpoint country for CIAM-NG. REQUIRED for MME ID ecosystem Client Applications OPTIONAL for all other Client Applications
+          # See CIAM OIDC Integration Guide, chapter "Authentication" for more details.
+          touchpoint:
+          # Specify a registration tracking id for new consumers.
+          # The rtid uses the following pattern:
+          # <Client-ID>.<Registration-Timestamp>.<Specified-Registration-Tracking-Id>
+          # Go Template expressions using Sprig (https://masterminds.github.io/sprig/) can be used here
+          # e.g. abcdef-abcdef-abcdef-abcdef-abcdef.20200511.0a39af85-5cae-4396-b8ac-a882df60ba2b
+          # See CIAM OIDC Integration Guide, chapter "Registration Tracking Id" for more details.
+          # rtid: '{{ .clientID }}.{{ now | date "20060102" }}.{{ uuidv4 }}'
+          rtid:
+      # Configuration for the OAuth Token Endpoint
+      token:
+        # Define the URL of the token endpoint.
+        # e.g. https://sso-int.e.corpintra.net/as/token.oauth2
+        # This property is already set when specifying a preset.
+        url:
+      # Configuration for the OAuth Token Introspection Endpoint
+      introspection:
+        # Define the URL of the token introspection endpoint.
+        # e.g. https://sso-int.e.corpintra.net/as/introspect.oauth2
+        # This property is already set when specifying a preset.
+        url:
+      # Configuration for the OAuth Revocation Endpoint
+      revocation:
+        # Define the URL of the revocation endpoint.
+        # Set to "" for CIAM, since CIAM has no Token Revocation Endpoint.
+        # e.g. https://my-oidc-provider/revoke_token.oauth2
+        # This property is already set when specifying a preset.
+        url:
+      # Configuration for the JSON Web Key Set of the OIDC Provider
+      jwks:
+        # Define the URL of the JWKS endpoint.
+        # e.g. https://sso-int.e.corpintra.net/pf/JWKS
+        # This property is already set when specifying a preset.
+        url:
+        # Defines the issuer of the OIDC Provider
+        # e.g. https://login-int.daimler.com
+        # This property is already set when specifying a preset.
+        issuer:
+        # Defines the allowed amount of clock skew between OIDC Provider's time and local time when validating tokens
+        allowedClockSkew: 120s
+      # Configuration for the OIDC Front-Channel Logout Endpoint
+      logout:
+        # Defines the URL of the OIDC Front-Channel Logout Endpoint
+        # e.g. https://sso-int.e.corpintra.net/idp/startSLO.ping
+        # This property is already set when specifying a preset.
+        url:
+        # Specify additional query parameters that are appended to the OIDC Front-Channel Logout URL
+        additionalQueryParams:
+          # Append the ClientID used for authentication against the OAuth provider as a request parameter
+          # when calling the OIDC Front-Channel Logout Endpoint or not. Needed for [CIAM](https://git.daimler.com/i3/i3-access/blob/master/docs/iam.md).
+          # This property is already set when specifying a preset.
+          client_id:
+          # If set, this value is added as a request parameter when calling the OIDC Front-Channel Logout Endpoint.
+          # Needed for CIAM Classic
+          # e.g. http://myurl.com/postlogout
+          # This property is already set when specifying a preset.
+          post_logout_redirect_uri:
+          # If set, this value is added as a request parameter when calling the OIDC Front-Channel Logout Endpoint.
+          # Needed for CIAM NG.
+          # e.g. http://myurl.com/postlogout
+          TargetResource:
+      # Configuration for the OIDC UserInfo Endpoint
+      userinfo:
+        # Defines the URL of the OIDC UserInfo Endpoint
+        # e.g. https://sso-int.e.corpintra.net/idp/startSLO.ping
+        # This property is already set when specifying a preset.
+        url:
+    # Define connection specifics for calls against the identity provider
+    connection:
+      # Defines the timeout for calls against the identity provider (e.g. [GAS-OIDC](https://git.daimler.com/i3/i3-access/blob/master/docs/iam.md))
+      timeout: 10s
+    # Delay for validating new refresh tokens. This can be disabled by supplying a value <= 0
+    validateRefreshTokenDelay: 50ms
+    # Refresh access token randomly before expiry with increasing probability
+    refreshAccessTokenBeforeExpiry: 300s
+
+  # Configuration for token exchange connection between i3-tex-caddy and i3-tex-service
+  tokenExchange:
+    # Specify baseURL for access to tex-service, if empty, defaults to `http://tex-service.<namespace>``
+    baseURL:
+    credentials:
+      # Client id for basic authentication of token exchange clients
+      # This value can be defined by each project itself and is mandatory
+      clientID:
+      # Client secret for basic authentication of token exchange clients
+      # This value can be defined by each project itself and is mandatory
+      clientSecret:
+    # Configure retries and timeouts for connections between tex-caddy and tex-service
+    connection:
+      timeout: 10s
+      retries: 2
+# --end global--
+
+# --begin tex-caddy-helm--
+##
+# Configuration section for tex-caddy helm subchart.
+tex-caddy-helm:
+  resourceName: tex-caddy
+  replicas: 2
+  # Configure pod disruption budgets to avoid service outage.
+  podDisruptionBudgets:
+    # By default, no budget will be created.
+    enabled: false
+    # Please make sure to adapt unavailability budget to your replica count.
+    maxUnavailable: 1
+  # Configure deployment's update strategy.
+  # For more information, see https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+  # The minimum number of seconds tex-caddy needs to be up and running before the Deployment controller considers it available
+  minReadySeconds: 0
+  # Amount of time (in seconds) before Kubernetes will send the SIGKILL signal if tex-caddy does not shut down
+  terminationGracePeriodSeconds: 60
+  # Configure additional annotations for different Kubernetes resources
+  annotations:
+    pod: {}
+    deployment: {}
+    service: {}
+    ingress: {}
+  # Configure additional labels for different Kubernetes resources
+  labels:
+    pod: {}
+    deployment: {}
+    service: {}
+    ingress: {}
+  image:
+    pullPolicy: IfNotPresent
+    repository: registry.app.corpintra.net/i3/tex-caddy
+    tag: 4.8.0
+    # Optionally specify an array of imagePullSecrets.
+    # Secrets must be created manually.
+    pullSecrets: []
+  # Add lifecycle hooks to tex-caddy
+  lifecycle: {}
+  # Affinity and anti-affinity
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  # affinity:
+  #   podAntiAffinity:
+  #    preferredDuringSchedulingIgnoredDuringExecution:
+  #    - weight: 100
+  #      podAffinityTerm:
+  #        labelSelector:
+  #          matchExpressions:
+  #          - key: app
+  #            operator: In
+  #            values:
+  #            - i3-tex-caddy
+  #        topologyKey: kubernetes.io/hostname
+  affinity: {}
+
+  # Setting Kubernetes PriorityClass
+  # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+  # priorityClassName: my-priority
+
+  # Setting nodeSelector to schedule pods on dedicated nodes
+  # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+  nodeSelector: {}
+  # nodeSelector:
+  #   key: value
+
+  # Setting tolerations to allow pods to be scheduled on tainted nodes
+  # https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+  # tolerations:
+  # - key: some-key
+  #   operator: Equal
+  #   value: some-value
+  #   effect: NoSchedule
+  # - key: some-key
+  #   operator: Equal
+  #   value: some-value
+  #   effect: NoExecute
+
+  # Specify extra resources
+  extra:
+    # See https://kubernetes.io/docs/concepts/storage/volumes/
+    volumes: []
+    # Specify additional volumeMounts that are applied to tex-caddy and traefik (if enabled)
+    volumeMounts: []
+    # Specify additional environment variables that are applied to i3-tex-caddy
+    # Example:
+    # envs:
+    #  - name: HTTP_PROXY
+    #    value: "http://http-proxy:8000"
+    envs: []
+    # Specify additional configmaps that are deployed to the same namespace as i3-access and can be mounted inside the pods via extra.volumes and extra.volumeMounts
+    # configmaps:
+    #   - suffix: configmap_name_suffix
+    #     data:
+    #       some_key: some_value
+    #   - suffix: another_configmap_name_suffix
+    #     data:
+    #       another_key: another_value
+    configmaps: []
+    # Specify additional containers that shall run inside i3-tex-caddy pod
+    # See https://kubernetes.io/docs/concepts/workloads/pods
+    containers: []
+    # Specify (additional) initContainers to be executed inside the i3-tex-caddy pod
+    # See https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    initContainers: []
+    # # Specify additional secrets that will be mounted automatically to /secrets/{key}
+    # # If no value is set, a random string will be generated.
+    # # Please note, that these extra secrets are only considered if createConfigurationSecrets is enabled.
+    # secrets:
+    #   - key: file.name
+    #     value: <SECRET>
+    #   - key: secret.autogenerated
+    secrets: []
+  # Configure resources that are tied to inbound connections. This includes Kubernetes services, ingress objects and TLS configuration.
+  inbound:
+    # Creates a Kubernetes service pointing to i3-tex-caddy.
+    service:
+      # By default, the created service is only accessible from within the cluster.
+      # Switch to type 'LoadBalancer' to enable traffic from an external load balancer.
+      type: "ClusterIP"
+      # Please see https://git.daimler.com/i3/i3-access/blob/master/docs/handle_incoming_traffic.md for configuration details.
+      loadBalancer:
+        # An IP that is already used or was used before might also be used here.
+        # Default is to leave it empty which means that the IP is automatically assigned.
+        ip: ""
+        # Define ip ranges that are allowed to pass FWaaS and access your service, e.g. 53.9.9.0/24
+        # It is highly recommended to set the sourceRanges.
+        sourceRanges: []
+      # List all enabled ports for the load balancer defined above.
+      ports:
+        - name: "http"
+          port: 80
+          targetPort: "http"
+        # - name: "https"
+        #   port: 443
+        #   targetPort: "https"
+        # # Additional port for Traefik web ui
+        # - name: "web"
+        #   port: 8080
+        #   targetPort: web
+    # Deploy an ingress resource, pointing to tex-caddy Kubernetes service.
+    ingress:
+      enabled: false
+      enableTLS: false
+      # Name of the IngressClass to assign this ingress to an ingress controller
+      ingressClassName:
+      rules:
+        - host:
+          http:
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    name: tex-caddy
+                    port:
+                      name: http
+    # Configure inbound TLS settings
+    # Either tex-caddy or ingressController can be configured to terminate TLS connections
+    # * tex-caddy: activate via `tex-caddy-helm.texCaddy.caddyfile.tls.enabled`
+    # * ingressController: activate via `tex-caddy-helm.inbound.ingress.enableTLS`
+    tls:
+      enabled: false
+      # Configure certificate (gerneration) settings.
+      # Make sure to only configure one of [`fromBase64`, `fromSecret`], or they will be prioritized in that order.
+      certificate:
+        # Specify the name of a manually created secret containing `tls.crt` and `tls.key`.
+        fromSecret:
+        # Specify an already existing TLS cert and key by its base64 encoded representation
+        fromBase64:
+          cert:
+          key:
+  # Create required Kubernetes secrets for i3-tex-caddy during deployment of i3-access
+  # Disable this with caution. When disabled, the custom secret has to be mounted manually (via `extra.volumes` and `extra.volumeMounts`) to `/secrets`.
+  # Further, the structure (the property names) of the custom secret has to match the automatically generated secret you disabled.
+  createConfigurationSecrets: true
+  # Deploy required rbac resources to allow Traefik to query the Kubernetes API
+  rbac:
+    # RBAC will be only deployed if Traefik is enabled
+    enabled: true
+    # Only deploy roles for the current namespace. If set to 'false', cluster-wide roles will be deployed instead.
+    # Set to 'false' to allow watching multiple namespaces. The watched namespaces must be configured in tex-caddy-helm.traefik.providers section.
+    namespaced: true
+  serviceAccount:
+   # automountServiceAccountToken: false
+  # Configuration for i3-tex-caddy specific values
+  texCaddy:
+    # Configure liveness and readiness probes for tex-caddy in kubernetes (https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+    # e.g.:
+    probes:
+      liveness:
+    #     tcpSocket:
+    #       port: 9091
+    #     initialDelaySeconds: 10
+    #     timeoutSeconds: 5
+      readiness:
+    #     httpGet:
+    #       path: /health
+    #       port: 9091
+
+    # Defines Kubernetes compute resources for the i3-tex-caddy container
+    # The following example is just a good point to start.
+    # The values have to be adapted according to the project and performance requirements
+    resources: {}
+      # limits:
+      #   memory: "100Mi"
+      #   cpu: "200m"
+      # requests:
+      #   memory: "100Mi"
+      #   cpu: "200m"
+    # Configure securityContext for the tex-caddy container
+    securityContext:
+      readOnlyRootFilesystem: true
+    # Override the generated Caddyfile with your own file.
+    # Paste the content your Caddyfile as in-line file below.
+    # Enabling this property will disable all other caddyfile properties.
+    caddyfileOverride:
+    # Defines generation of the i3-tex-caddy configuration ("Caddyfile") from properties.
+    # Only properties listed are supported by the Deployment.
+    # If you need a more advanced configuration, please specify `texCaddy.caddyfileOverride`
+    caddyfile:
+      # Define specific access log settings for tex-caddy. If set, `global.logging` settings will be overwritten.
+      # See https://caddyserver.com/docs/caddyfile/directives/log
+      # accessLog: |
+      #   format console
+      #   level DEBUG
+      accessLog:
+      # Set a path to enable the external health endpoint that returns "200 OK". Note that you must also add this path to the "except" paths below.
+      health:
+        # e.g.
+        # path: "/infra/lbtest1.html"
+        path:
+      # Configure TLS for tex-caddy
+      tls:
+        enabled: false
+        # Optionally specify a default TLS ServerName for when clients do not use SNI in their ClientHello.
+        # Defaults to `ingress.<namespace_name>``
+        # You can retrieve the server name by executing:
+        # openssl x509 -noout -subject -in <some_tls.crt> | sed -nr 's/.*CN = ([^,]+).*/\1/p'
+        defaultSNI:
+
+      # Defines the i3-tex-caddy plugin configuration
+      tex:
+        # Specify a list of paths to be handled different depending on their type
+        # Each list item can hold either `except`, `api` or `ui` as property. Ordering of the items is preserved when written to Caddyfile.
+        # * except: Defines an array of paths to exclude from i3-tex-caddy protection.
+        # * api: Defines an array of paths which will get HTTP status 401 if not authorized.
+        # * ui: Defines an array of paths which will be redirected to global.oidcProvider.authUrl instead of getting HTTP status 401 if not authorized.
+        # Paths are matched by "starts-with"-based golang regular expression (regular expression is automatically prefixed with '^')
+        # PLEASE NOTE:
+        # At except, the authorization header is removed due to a security finding. If you need a route that should remain untouched by caddy, this must be configured by tex-caddy-helm.texCaddy.caddyfile.additionalCaddyfileDirectives
+        # See: https://git.daimler.com/i3/i3-access/blob/master/docs/configure_caddy.md#bypass-requests
+        paths:
+          # # Further examples:
+          # - except: ["/favicon.ico", "/assets/"]
+          # - api: ["/api"]
+          - ui: [ "/" ]
+      # Defines headers for one or more application paths
+      headers:
+        # # Array of objects of the following shape:
+        #   # Optionally specify path on which the headers should be included in the response
+        # - path: "/"
+        #   # Specify an array of header settings
+        #   settings:
+        #       # Name of the header
+        #     - name: Location
+        #       # Value of the header
+        #       value: "http://example.com"
+        #       # If a replacement is configured and header already exists, the matching value will be replaced
+        #       # In this example the Location header will hold `https://example.com` after replacement.
+        #       replacement: "https://"
+        #       # If remove is enabled, the header gets purged before the response is returned
+        #       remove: false
+        #
+        # The following list of default headers is a result of required headers for I³ Echo JWT App plus feedback from security scans.
+        # The list of headers is used for all request,
+        - settings:
+            - name: Strict-Transport-Security
+              value: "max-age=31536000; preload;"
+            - name: X-Frame-Options
+              value: "DENY"
+            - name: X-XSS-Protection
+              value: "1; mode=block"
+            - name: X-Content-Type-Options
+              value: "nosniff"
+            - name: Content-Security-Policy
+              value: "frame-ancestors 'none'; script-src 'self'; object-src 'none';"
+            - name: X-Content-Security-Policy
+              value: "frame-options 'deny';"
+            - name: Referrer-Policy
+              value: "no-referrer"
+            - name: Server
+              remove: true
+      # Specify additional directives for Caddyfile. Paste your configuration as in-line file below. See https://caddyserver.com/docs/caddyfile/directives
+      additionalCaddyfileDirectives:
+
+      # Defines the routing to one or more proxies behind i3-tex-caddy, usually an ingress controller
+      proxies:
+          # URL of the target proxy
+        - backend: "http://127.0.0.1:8000"
+          # Define a request path that should be proxied.
+          # Please see Caddyserver matcher docs https://caddyserver.com/docs/caddyfile/matchers for example matcher definitions.
+          path: "/*"
+          # # Array of caddy settings for proxy directive. See https://caddyserver.com/docs/caddyfile/directives/reverse_proxy
+          # # Example:
+          # - |
+          #     # former transparent option
+          #     header_up Host {http.request.host}
+          #     header_up X-Real-IP {http.request.remote}
+          #     header_up X-Forwarded-For {http.request.remote}
+          #     header_up X-Forwarded-Port {http.request.port}
+          #     header_up X-Forwarded-Proto {http.request.scheme}
+          # - |
+          #     # former insecure_skip_verify option
+          #     # use this only for https backends or caddy will refuse to start
+          #     transport http {
+          #       tls_insecure_skip_verify
+          #     }
+          settings:
+          - |
+              header_up Host {http.request.host}
+              header_up X-Real-IP {http.request.remote}
+              header_up X-Forwarded-For {http.request.remote}
+              header_up X-Forwarded-Port {http.request.port}
+              header_up X-Forwarded-Proto {http.request.scheme}
+    # Configure i3-tex-caddy specific routes
+    routes:
+      # i3-tex-caddy logout endpoint, this path is used to trigger the logout and call the GAS OIDC End Session Endpoint
+      logoutUrl: /logout
+      # If empty, defaults to "/user_logged_out".
+      userLoggedOutUrl:
+      # Defines the i3-tex-caddy login endpoint. This path is used to identify the authentication request after successful login from GAS OIDC.
+      # See https://git.daimler.com/i3/i3-access/blob/master/docs/login_handling.md for details
+      loginUrl: /login
+      # Allows the definition of a custom error page url for OIDC provider responses with http error code 400 `StatusBadRequest`.
+      # For example, this is possible in case of the GAS-OIDC feature "basic_start_authorization" if a user doesn't have the required permission.
+      # Please note that the error page path has to match an "except" path in the tex-caddy configuration. This ensures that the error page is unprotected.
+      # e.g. "http://mydomain/myapp/error.html"
+      customErrorPageUrl:
+      # Defines the base url of your application
+      # This value is not mandatory but helps with X-Forwarded-Proto problems
+      # e.g. http://myurl.com/app
+      applicationBaseUrl:
+    # Defines how i3-tex-caddy handles tokens.
+    # Possible values:
+    # COOKIE: only tokens in the tex cookie will be considered.
+    # HEADER: only tokens in the header will be considered.
+    # COOKIE_HEADER: i3-tex-caddy checks first tokens from the tex cookie and then in the header.
+    # HEADER_COOKIE: i3-tex-caddy checks first tokens in the header and then from the tex cookie.
+    # For technical users, this property has to be adjusted to accept cookies (for SPA via Browser) and access tokens (for technical users) in the header.
+    tokenMode: "HEADER_COOKIE"
+    # Defines properties for the cookies created by i3-tex-caddy
+    cookies:
+      # Defines properties for the "session" cookie created by i3-tex-caddy
+      tex:
+        # Defines the validity path for the created cookie.
+        # This must match the relative path to your application.
+        # Example: /app
+        path: "/"
+        # Defines the timeout when TEX cookie expires and a new refresh token is requested from the OIDC provider.
+        # Examples: 8h, 360m. Valid time units are "ns", "us", "ms", "s", "m", "h". Default: 6h.
+        # For security reasons this value should only be changed in rare cases.
+        refreshTokenTimeout: 6h
+        # Defines the cookie max age in seconds.
+        # If empty: use the default value and let i3-access handle the session.
+        # If set to 0: create a session cookie. Note: this will only work if the browser isn't configured to restore previous session on startup.
+        maxAge:
+        # Defines the host for the created cookie.
+        # This value is mandatory
+        # Since this value goes directly to tex-caddy's Caddyfile, it can be used with Caddy placeholders (https://caddyserver.com/docs/caddyfile/concepts#placeholders)
+        # Example: "caas-int.app.corpintra.net" or "{host}"
+        # This value is mandatory.
+        domain:
+        # Defines the cookie name
+        name: "TEX"
+         # Marks the cookie as secure and ensures secure protocol (https)
+        secure: true
+        # Marks the cookie as HttpOnly
+        httpOnly: true
+        # Configure keys for for cookie de- and encryption.
+        # If nothing is configured here, a random blockKey will be generated.
+        # Please note that a rolling upgrade with a randomly generated blockKey will invalidate all active cookies.
+        blockKey:
+          # Specify a 32 bytes string for cookie de- and encryption.
+          # The provided string will be base64-encoded during Helm install.
+          # e.g. "1234567890abcdef1234567890abcdef"
+          fromString:
+            active:
+          # Specify a reference to a secret with a 32 bytes string for cookie de- and encryption.
+          # If `tex-caddy-helm.texCaddy.cookies.tex.blockKey.fromString` is set, this property will be ignored.
+          # # Example:
+          # fromSecret:
+          #   active:
+          #     secretName: my-secret
+          #     key: block.key.active
+          fromSecret:
+            active:
+              secretName:
+              key:
+        # Configure keys for for cookie validation.
+        # If nothing is configured here, a random blockKey will be generated.
+        # Please note that a rolling upgrade with a randomly generated hashKey will invalidate all active cookies.
+        hashKey:
+          # Specify a 16 bytes string for cookie validation.
+          # The provided string will be base64-encoded during Helm install.
+          # e.g. "1234567890abcdef"
+          fromString:
+            active:
+          # Specify a reference to a secret with a 32 bytes string for cookie validation.
+          # If `tex-caddy-helm.texCaddy.cookies.tex.hashKey.fromString` is set, this property will be ignored.
+          # # Example:
+          # fromSecret:
+          #   active:
+          #     secretName: my-secret
+          #     key: hash.key.active
+          fromSecret:
+            active:
+              secretName:
+              key:
+        # Defines the cookie SameSite attribute
+        sameSite: "SameSite=Lax"
+      # Configure the login state cookie
+      state:
+        # Defines the login state cookie name
+        name: "TEX_LOGIN_STATE"
+        # Enables the simultaneous use of several state cookies.
+        # Allows the user to do multiple logins in different browser tabs at the same time.
+        # This feature is useful for a portal application that uses deep links. The default is false.
+        # Be aware of any cookie limits (e.g. max number of cookies per request) to avoid a ERR_CONNECTION_RESET error.
+        # Experimental feature!
+        multiple:
+          enabled: false
+          # Defines the expiration time for the state cookie. Default is 0 what means the state cookie is session scoped.
+          # Requires property "tex-caddy-helm.texCaddy.cookies.state.multiple.enabled" is set to true.
+          # Experimental feature!
+          expiry: 1000s
+    # Configures the token_info endpoint to request the access token and expiration for SPA. See "11.4. Single Page Applications (SPAs)" https://pages.git.daimler.com/IAM/GAS-OIDC-Integration_Guide/docs/guide/public_clients/#spa
+    tokenInfo:
+      enabled: false
+      url: "/token_info"
+    # Configures the auth endpoints. This is currently an experimental feature! See https://git.daimler.com/i3/i3-access/blob/master/docs/auth.md for configuration.
+    auth:
+      enabled: false
+      # If true: After refreshing AccessToken a redirect with 307 is triggered to send the refreshed TEX cookie to the client. Used with Traefik IC, since forwardAuth middleware don't return cookies from auth server.
+      # If false: After refreshing AccessToken proceed with request and rely on the ingress controller to return the refreshed TEX cookie with the backend response. Used with nginx external auth.
+      redirectOnTokenRefresh: true
+      path:
+        # ui + api endpoints are used for usage in different ingress for ui and api
+        # auth endpoint for ui; i.e. redirect to OIDC provider for unauthorized requests
+        ui: "/auth-ui"
+        # auth endpoint for api; i.e. return 401 for unauthorized requests
+        api: "/auth-api"
+        # auth endpoint for usage in one ingress. It honors i3-access config; i.e. redirect or return 401 based on config tex-caddy-helm.texCaddy.caddyfile.tex.paths
+        auth: "/auth"
+        # endpoint, which always redirect to OIDC provider. Needed for nginx external auth.
+        signIn: "/auth-signin"
+    # Configure i3-tex-caddy caching
+    caches:
+      # Configure cache for JSON Web Key Set
+      jwks:
+        # Defines the period after that the cached JSON Web Key Set will be invalidated
+        entriesExpiry: 10m
+
+  # Configuration for Traefik specific values
+  traefik:
+    enabled: true
+    image:
+      pullPolicy: IfNotPresent
+      repository: registry.app.corpintra.net/dockerhub/library/traefik
+      tag: 2.7.2
+    # Configure liveness and readiness probes for Traefik in kubernetes (https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+    probes:
+      readiness:
+      liveness:
+        # httpGet:
+        #   path: /ping
+        #   port: 8000
+        # initialDelaySeconds: 10
+        # timeoutSeconds: 5
+
+    # Define Kubernetes compute resources for the Traefik container inside i3-tex-caddy pod
+    # The following example is just a good point to start.
+    # The values have to be adapted according to the project and performance requirements
+    resources: {}
+      # limits:
+      #   memory: "100M"
+      #   cpu: "100m"
+      # requests:
+      #   memory: "100M"
+      #   cpu: "100m"
+    # Configure securityContext for the traefik container
+    securityContext:
+      runAsUser: 1000
+      readOnlyRootFilesystem: true
+    # Add lifecycle hooks to traefik
+    lifecycle: {}
+    # Exposes Traefik's configuration on a separate, unprotected port, see https://doc.traefik.io/traefik/v2.5/operations/dashboard/
+    # Only enable in production if explicitly needed
+    dashboard:
+      enabled: false
+    # Configures Traefik to trust forwarded headers information.
+    forwardedHeaders:
+      insecure: false
+    # # Configure access logging behavior for Traefik. See https://doc.traefik.io/traefik/v2.5/observability/access-logs/
+    # # The configuration gets converted to Traefiks TOML format.
+    # # accessLog.format is set automatically according to `global.logging.format`.
+    # # Example:
+    # accessLog:
+    #   bufferingSize: "0"
+    #   filters:
+    #     statusCodes: ["200", "300-302"]
+    #     retryAttempts: true
+    #     minDuration: "10ms"
+    accessLog:
+      bufferingSize: "0"
+    # Configuration of Traefik configuration providers
+    providers:
+      # Configuration of Traefik Kubernetes CRD provider
+      # Please make sure to install all necessary CRDs manually, before Kubernetes resources for Traefik can be applied.
+      # See https://doc.traefik.io/traefik/v2.5/providers/kubernetes-crd/ and https://git.daimler.com/i3/i3-access/issues/436
+      kubernetesCRD:
+        enabled: false
+        # Watch a list of namespaces, defined in tex-caddy-helm.traefik.providers.kubernetesCRD.namespaces
+        # If true, only the deployed namespace and the additionally listed namespaces are watched.
+        # If false, all namespaces are watched and the list of namespaces is ignored.
+        useNamespaceList: true
+        # List of additional namespaces where Traefik should watch for ingress definitions.
+        # Please note that the network policies required to forward requests to additional namespaces are not deployed by this helm chart and have to be configured.
+        # To watch ingresses in additional namespaces, set `tex-caddy-helm.rbac.namespaced` to `false`.
+        # Default: The namespace where tex-caddy is deployed (empty array).
+        # e.g. ["default", "production"]
+        namespaces: []
+        # Ingress label selector to filter Ingress objects that should be processed by Traefik.
+        # Default: empty (process all Ingresses in watched namespaces)
+        # e.g. labelselector: "expose=internal"
+        labelSelector:
+        # Value of `kubernetes.io/ingress.class` annotation that identifies Ingress objects to be processed by Traefik.
+        # If the parameter is non-empty, only Ingresses containing an annotation with the same value are processed.
+        # Otherwise, Ingresses missing the annotation, having an empty value, or the value `traefik` are processed.
+        # e.g. "traefik-internal"
+        ingressClass:
+        # Throttle how frequently traefik should refresh the configuration from Ingresses when there are frequent changes.
+        throttleDuration: "0s"
+      # Configuration of Traefik Kubernetes Ingress provider, see https://doc.traefik.io/traefik/v2.5/providers/kubernetes-ingress/
+      kubernetesIngress:
+        enabled: true
+        # Watch a list of namespaces, defined in tex-caddy-helm.traefik.providers.kubernetesIngress.namespaces
+        # If true, only the deployed namespace and the additionally listed namespaces are watched.
+        # If false, all namespaces are watched and the list of namespaces is ignored.
+        useNamespaceList: true
+        # List of additional namespaces where Traefik should watch for ingress definitions.
+        # Please note that the network policies required to forward requests to additional namespaces are not deployed by this helm chart and have to be configured.
+        # To watch ingresses in additional namespaces, set `tex-caddy-helm.rbac.namespaced` to `false`.
+        # Default: The namespace where tex-caddy is deployed (empty array).
+        # e.g. ["default", "production"]
+        namespaces: []
+        # Ingress label selector to filter Ingress objects that should be processed by Traefik.
+        # Default: empty (process all Ingresses in watched namespaces)
+        # e.g. labelselector: "expose=internal"
+        labelSelector:
+        # Value of `kubernetes.io/ingress.class` annotation that identifies Ingress objects to be processed by Traefik.
+        # If the parameter is non-empty, only Ingresses containing an annotation with the same value are processed.
+        # Otherwise, Ingresses missing the annotation, having an empty value, or the value `traefik` are processed.
+        # e.g. "traefik-internal"
+        ingressClass:
+        # Throttle how frequently traefik should refresh the configuration from Ingresses when there are frequent changes.
+        throttleDuration: "0s"
+
+      # Configuration of Traefik file provider, see https://doc.traefik.io/traefik/v2.5/providers/file/
+      file:
+      #  filename: "/path/to/config/dynamic_conf.toml"
+    # Disable backend tls certificate validation. This is a workaround for Traefik limitations and reduces security.
+    # Please see Traefik Github issue https://github.com/containous/traefik/issues/3906
+    # Disabled by default.
+    insecureSkipVerify: false
+# --end tex-caddy-helm-- DON'T REMOVE this limiter since it's required for subchart values processing
+
+# --begin tex-service-helm--
+##
+# Configuration section for tex-service helm subchart.
+tex-service-helm:
+  resourceName: tex-service
+  replicas: 2
+  # Configure deployment's update strategy.
+  # For more information, see https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+  # The minimum number of seconds tex-service needs to be up and running before the Deployment controller considers it available
+  minReadySeconds: 0
+  # Amount of time (in seconds) before Kubernetes will send the SIGKILL signal if tex-service does not shut down
+  terminationGracePeriodSeconds: 60
+  # Configure additional annotations for different Kubernetes resources
+  annotations:
+    pod: {}
+    deployment: {}
+    service: {}
+  # Configure additional labels for different Kubernetes resources
+  labels:
+    pod: {}
+    deployment: {}
+    service: {}
+
+  # Setting Kubernetes PriorityClass
+  # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+  # priorityClassName: my-priority
+
+  # Setting nodeSelector to schedule pods on dedicated nodes
+  # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+  nodeSelector: {}
+  # nodeSelector:
+  #   key: value
+
+  # Setting tolerations to allow pods to be scheduled on tainted nodes
+  # https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+  # tolerations:
+  # - key: some-key
+  #   operator: Equal
+  #   value: some-value
+  #   effect: NoSchedule
+  # - key: some-key
+  #   operator: Equal
+  #   value: some-value
+  #   effect: NoExecute
+
+  # Specify extra resources
+  extra:
+    # See https://kubernetes.io/docs/concepts/storage/volumes/
+    volumes: []
+    # Specify additional volumeMounts that are applied to tex-service
+    volumeMounts: []
+    # Specify additional environment variables that are applied to i3-tex-service
+    # Example:
+    # envs:
+    #  - name: HTTP_PROXY
+    #    value: "http://http-proxy:8000"
+    envs: []
+    # Specify additional configmaps that are deployed to the same namespace as i3-access and can be mounted inside the pods via extra.volumes and extra.volumeMounts
+    # configmaps:
+    #   - suffix: configmap_name_suffix
+    #     data:
+    #       some_key: some_value
+    #   - suffix: another_configmap_name_suffix
+    #     data:
+    #       another_key: another_value
+    configmaps: []
+    # Specify additional containers that shall run inside i3-tex-service pod
+    # See https://kubernetes.io/docs/concepts/workloads/pods
+    containers: []
+    # Specify (additional) initContainers to be executed inside the i3-tex-service pod
+    # See https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    initContainers: []
+    # # Specify additional secrets that will be mounted automatically to /secrets/{key}
+    # # If no value is set, a random string will be generated.
+    # # Please note, that these extra secrets are only considered if createConfigurationSecrets is enabled.
+    # secrets:
+    #   - key: file.name
+    #     value: <SECRET>
+    #   - key: secret.autogenerated
+    secrets: []
+  image:
+    repository: registry.app.corpintra.net/i3/tex-service
+    tag: 4.8.0
+    pullPolicy: IfNotPresent
+    # Optionally specify an array of imagePullSecrets.
+    # Secrets must be created manually.
+    pullSecrets: []
+  # Add lifecycle hooks to tex-service
+  lifecycle: {}
+  # Configure pod disruption budgets to avoid service outage.
+  podDisruptionBudgets:
+    # By default, no budget will be created.
+    enabled: false
+    # Please make sure to adapt unavailability budget to your replica count.
+    maxUnavailable: 1
+  # Affinity and anti-affinity
+  # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  # affinity:
+  #   podAntiAffinity:
+  #    preferredDuringSchedulingIgnoredDuringExecution:
+  #    - weight: 100
+  #      podAffinityTerm:
+  #        labelSelector:
+  #          matchExpressions:
+  #          - key: app
+  #            operator: In
+  #            values:
+  #            - i3-tex-service
+  #        topologyKey: kubernetes.io/hostname
+  affinity: {}
+  # Create required Kubernetes secrets for i3-tex-service during deployment of i3-access
+  # Disable this with caution. When disabled, the custom secret has to be mounted manually (via `extra.volumes` and `extra.volumeMounts`) to `/secrets`.
+  # Further, the structure (the property names) of the custom secret has to match the automatically generated secret you disabled.
+  createConfigurationSecrets: true
+  # Configure resources that are tied to inbound connections.
+  inbound:
+    # Creates a Kubernetes service pointing to i3-tex-service.
+    service:
+      type: "ClusterIP"
+      # List all enabled ports for the load balancer defined above
+      ports:
+      - name: "http"
+        port: 80
+        targetPort: "http"
+  serviceAccount:
+    # automountServiceAccountToken: false
+  texService:
+    # Defines Kubernetes compute resources for the i3-tex-service container
+    # The following example is just a good point to start.
+    # The values have to be adapted according to the project and performance requirements
+    resources: {}
+      # limits:
+      #   memory: "200Mi"
+      #   cpu: "350m"
+      # requests:
+      #   memory: "200Mi"
+      #   cpu: "350m"
+    # Configure securityContext for the tex-service container
+    securityContext:
+      readOnlyRootFilesystem: true
+    # Configure liveness and readiness probes for tex-service in kubernetes (https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+    # e.g.:
+    probes:
+      liveness:
+      #   tcpSocket:
+      #     port: 8090
+      #   initialDelaySeconds: 10
+      #   timeoutSeconds: 5
+      readiness:
+        # httpGet:
+        #   path: /health
+        #   port: 8090
+    # Enable profiling endpoint tex-service:8090/debug/pprof/
+    profiling:
+      enabled: false
+    # Configure tex-service cache settings
+    cache:
+      disabled: false
+      # Configure expiry for cache entries. After the specified amount of time, outdated entries are marked as removable.
+      # This value must not be empty. Please provide a time duration greater than 0. If you would like to disable the AT/JWT caching, please set 'cache.disabled' to true.
+      entriesExpiry: "10m"
+      # Hash cache entry keys to have a defined length. This is only useful if external cache is enabled.
+      hashKeys: false
+      # Configuration of local cache inside each tex-service replica.
+      local:
+      # Configure maxSize for cache in MB. Please provide the value as integer.
+      # Cache will not allocate more memory than this limit.
+        maxSize: 50
+      # Configure a remote Redis cache, with shared usage by all tex-service replicas.
+      # Note that each replica still uses a local cache, but will store also each entry in the remote cache to share with other replicas.
+      # External caching should only be considered for a high number of tex-service replicas.
+      external:
+        # By default the external cache is disabled.
+        enabled: false
+        # # Specify redis address
+        # address: "redis-master:6379"
+        # # Optionally specify redis dbIndex. Default is 0.
+        # dbIndex: 0
+        # # Specify redis username.
+        # username:
+        #    string: "<REDIS-USERNAME>"
+        # # Specify redis password.
+        # # Could be set directly as string or as reference to a secret defined in tex-service-helm.extra.envs
+        # password:
+        #   string: "<REDIS-PASSWORD>"
+        #   envRef: "<REFERENCE_TO_ENV_SECRET_CONTAINING_REDIS_PASSWORD>"
+        # # Configure encryption of cache values.
+        # encryption:
+        # # Set a fixed encryption key with a length of 32 characters.
+        # # If you don't provide a fixed key, a random one will be generated.
+        # # Please note that all cache entries will be invalid after a re-deployment of i3-access with a random key.
+        #   key: "<SECRET>"
+      # Configure patterns for extending the cache key. If no patterns are configured, only the
+      # AccessToken is used as key (i.e. for one AccessToken one JWT is cached, independent of the called URI)
+      # Otherwise all patterns are iterated and checked for a match of the regex against the called URI.
+      # For the first matching regex, the template is used to extend the cache key. For the below example
+      # and the URI https://myserver/app1/api/resource, the cache key is extended by "app1" (the first matching group)
+      # Therefore the same JWT is cached for both URIs https://myserver/app1/api/resource and https://myserver/app1/gui , but
+      # for https://myserver/app2/api/resource a separate one is used (matching the group "app2")
+      # ATTENTION: this config is only useful, if you have configured mappers that create different JWTs for
+      # different URIs, which normally is only the case, if you have a custom remote mapper.
+      #keyExtensionPatterns:
+      #  - regex: "^https?://[^/]*/([^/]*)/.*"
+      #    template: "$1"
+    # Configure tex-service JSON Web Token (JWT) signing settings
+    jwt:
+      # Specify the 'iss' claim within the JWT.
+      # Defaults to tex-service.<namespace>
+      issuer: ""
+      # Specify the 'nbf' claim within the JWT.
+      notBefore: "2m"
+      # Specify the signing algorithm for the JWT. Supported algorithms based on ...
+      #   ... RSA: RS256, RS384, RS512
+      #   ... ECDSA: ES256, ES384, ES512
+      # Leave the fields signingAlgorithm and keys empty if the certificates should be auto generated
+      signingAlgorithm:
+      # Specify certificates for the JWT handling.
+      keys:
+        # Create base64-encoded secrets for JWT handling.
+        # Keys can be generated for example with the following script:
+        # https://git.daimler.com/i3/i3-access/blob/master/tex-service/keys/genkey.sh
+        fromString:
+          # Specify a private key certificate for the JWT signing.
+          # Example:
+          # signKey: |
+          #   -----BEGIN PRIV*** KEY-----
+          #   ...
+          #   -----END PRIV*** KEY-----
+          signKey:
+          # Specify a list of public key certificates for the JWKS endpoint, which are used for JWT signature validation.
+          # verifyKeys:
+          #   - |
+          #     -----BEGIN PUB*** KEY-----
+          #     ...
+          #     -----END PUB*** KEY-----
+          verifyKeys: []
+        # Use self-managed secrets holding the keys for JWT handling
+        fromSecret:
+          # Specify a private key certificate for the JWT signing.
+          # Example:
+          # signKey:
+          #   secretName: my-signkey-secret
+          #   key: sign.key
+          signKey:
+            secretName:
+            key:
+          # Specify a list of public key certificates for the JWKS endpoint, which are used for JWT signature validation.
+          # Example:
+          # verifyKeys
+          #   - secretName: "my-verify-secret"
+          #     key: "verify.key"
+          verifyKeys: []
+        # # Use filepaths with caution only in conjunction with `tex-service.createConfigurationSecrets: false`, `tex-service.extra.volumes` and `tex-service.extra.volumeMounts`
+        # # When providing your own secrets, we advise to rather configure `tex-service.texService.jwt.keys.fromSecret`
+        # filepaths:
+        #   signKey:
+        #   verifyKeys: []
+    # Configure default mappers that should be created without having to configure them manually via `tex-service-helm.texService.mappers`
+    preconfiguredMappers:
+      # Predefined mapper for access token validation
+      introspection:
+        enabled: true
+        # Conditions that must match the response of the introspection endpoint
+        #  conditions:
+        #  # Specify a list of client ids that are expected in the response.
+        #  - key: client_id
+        #    values: []
+        #  # Specify a list of scopes that are expected in the response.
+        #  - key: "scope"
+        #    # Split the string of received scopes and check for existence of "openid" substring.
+        #    expression: "{{ splitList \" \" . | has \"openid\" }}"
+        #  # Specify a list of required audiences, alternatively to expected clientIDs
+        #  # - key: "aud"
+        #  #   values: []
+        conditions: []
+        request:
+          # configure transport for requests to introspection endpoint.
+          transport: []
+      # Predefined mapper that queries userInfo endpoint and maps basic user information to the generated JWT
+      userinfo:
+        enabled: true
+        # Conditions that must be valid to execute the mapper
+        preconditions: []
+        request:
+          # configure transport for requests to userinfo endpoint.
+          transport: []
+        # Specify a list of properties that should be mapped into the generated JWT
+        mappings:
+          - source: sub
+            target: sub
+          - source: given_name
+            target: given_name
+          - source: family_name
+            target: family_name
+          - source: email
+            target: email
+    # Configure a list of mappers that is built into your JWT
+    # See https://git.daimler.com/i3/i3-access/blob/master/docs/mapper_customize_jwt.md
+    mappers: []

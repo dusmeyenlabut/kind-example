@@ -1,0 +1,107 @@
+{{- if .Values.traefik.enabled }}
+{{- $resourceName := .Values.resourceName -}}
+{{- $namespace := .Release.Namespace -}}
+{{- $heritage := .Release.Service -}}
+{{- $release := .Release.Name -}}
+{{- $chart := .Chart.Name -}}
+{{- if empty .Values.traefik.providers.kubernetesCRD.namespaces }}
+{{ $_ := set .Values.traefik.providers.kubernetesCRD "namespaces" (list .Release.Namespace) }}
+{{- end }}
+{{- if empty .Values.traefik.providers.kubernetesIngress.namespaces }}
+{{ $_ := set .Values.traefik.providers.kubernetesIngress "namespaces" (list .Release.Namespace) }}
+{{- end }}
+{{- $logFormat := .Values.global.logging.format -}}
+{{- if (eq $logFormat "console") }}
+{{- $logFormat = "common" -}}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.resourceName }}-traefik-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+data:
+  traefik.toml: |
+    defaultEntryPoints = ["http"]
+
+    [entryPoints]
+      [entryPoints.http]
+        address = ":8000"
+        {{- if .Values.traefik.forwardedHeaders.insecure }}
+        [entryPoints.http.forwardedHeaders]
+          insecure = true
+        {{- end }}
+      {{- if .Values.traefik.dashboard.enabled }}
+      [entryPoints.traefik]
+        address = ":8080"
+      {{- end }}
+
+      {{- if .Values.global.metrics.enabled }}
+      [entryPoints.metrics]
+        address = ":8081"
+      {{- end }}
+
+    {{- if .Values.global.metrics.enabled }}
+    [metrics]
+      [metrics.prometheus]
+        buckets = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+        entryPoint = "metrics"
+    {{- end }}
+
+    [ping]
+      entryPoint = "http"
+
+    [log]
+      level = {{ .Values.global.logging.level | quote }}
+      format = {{ $logFormat | quote }}
+
+    {{ $logConfig := dict "accessLog" .Values.traefik.accessLog }}
+    {{- if empty $logConfig.accessLog.format }}
+    {{- $_ := set $logConfig.accessLog "format" $logFormat }}
+    {{- end }}
+    {{- toToml $logConfig | nindent 4 }}
+
+    {{- if .Values.traefik.dashboard.enabled }}
+    [api]
+      # Dashboard
+      dashboard = true
+      insecure = true
+    {{- end }}
+
+    {{- if .Values.traefik.insecureSkipVerify }}
+    [serversTransport]
+      insecureSkipVerify = true
+    {{- end }}
+
+    [tracing]
+      serviceName = "traefik.{{.Values.resourceName}}.{{.Release.Namespace}}"
+      [tracing.jaeger]
+        samplingType = "{{ .Values.global.tracing.samplerType }}"
+        samplingParam = {{ .Values.global.tracing.samplerParam }}
+        localAgentHostPort = "{{ .Values.global.tracing.agentHost }}:{{ .Values.global.tracing.agentPort }}"
+
+    [providers]
+      {{- if .Values.traefik.providers.file }}
+      [providers.file]
+        {{- toToml .Values.traefik.providers.file | nindent 8 }}
+      {{- end }}
+
+      {{- if .Values.traefik.providers.kubernetesCRD.enabled }}
+      [providers.kubernetesCRD]
+        {{- if .Values.traefik.providers.kubernetesCRD.useNamespaceList }}
+        {{- toToml (omit .Values.traefik.providers.kubernetesCRD "enabled" "useNamespaceList") | nindent 8 -}}
+        {{- else }}
+        {{- toToml (omit .Values.traefik.providers.kubernetesCRD "enabled" "useNamespaceList" "namespaces") | nindent 8 -}}
+        {{- end }}
+      {{- end }}
+
+      {{- if .Values.traefik.providers.kubernetesIngress.enabled }}
+      [providers.kubernetesIngress]
+    {{- if .Values.traefik.providers.kubernetesIngress.useNamespaceList }}
+    {{- toToml (omit .Values.traefik.providers.kubernetesIngress "enabled" "useNamespaceList") | nindent 8 -}}
+    {{- else }}
+    {{- toToml (omit .Values.traefik.providers.kubernetesIngress "enabled" "useNamespaceList" "namespaces") | nindent 8 -}}
+    {{- end }}
+      {{- end }}
+{{- end }}

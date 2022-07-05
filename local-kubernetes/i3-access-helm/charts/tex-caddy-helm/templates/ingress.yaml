@@ -1,0 +1,24 @@
+{{- $_ := include "migrate.texCaddy" . -}}
+{{- if .Values.inbound.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.resourceName }}
+  namespace: {{ .Release.Namespace }}
+  {{- if .Values.annotations.ingress }}
+  annotations:
+    {{ toYaml .Values.annotations.ingress | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+    {{- if .Values.labels.ingress }}
+    {{ toYaml .Values.labels.ingress | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if .Values.inbound.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.inbound.ingress.ingressClassName }}
+  {{- end }}
+  {{- include "tls.ingress" . | nindent 2 }}
+  rules:
+    {{- toYaml .Values.inbound.ingress.rules | nindent 4 }}
+{{- end}}

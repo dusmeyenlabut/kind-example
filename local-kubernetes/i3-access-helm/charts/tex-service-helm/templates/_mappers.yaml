@@ -1,0 +1,72 @@
+{{- define "mappers.secret" }}
+{{- if .Values.texService.preconfiguredMappers.introspection.enabled -}}
+introspection.client.id: {{ .Values.global.oidcProvider.clientCredentials.tokenIntrospection.clientID | b64enc | quote }}
+introspection.client.secret:  {{ .Values.global.oidcProvider.clientCredentials.tokenIntrospection.clientSecret | b64enc | quote }}
+{{- end }}
+{{- end }}
+
+{{- define "mappers.configmap" }}
+{{- if .Values.texService.preconfiguredMappers.introspection.enabled -}}
+- name: Introspection
+  url: "{{ .Values.global.oidcProvider.endpoints.introspection.url }}"
+  request:
+    method: POST
+    formData:
+      - key: token
+        value: "{{`{{`}}.AccessToken{{`}}`}}"
+      - key: token_type_hint
+        value: access_token
+    basicAuth:
+      user:
+        fileRef: /secrets/introspection.client.id
+      password:
+        fileRef: /secrets/introspection.client.secret
+    headers:
+      - key: Content-Type
+        value: application/x-www-form-urlencoded
+    {{- if .Values.texService.preconfiguredMappers.introspection.request.transport }}
+    transport:
+      {{- toYaml .Values.texService.preconfiguredMappers.introspection.request.transport | nindent 6 }}
+    {{- end }}
+  expectedResponse:
+    statusCodes: [200]
+    conditions:
+      - key: "active"
+        values: ["true"]
+      {{- if .Values.texService.preconfiguredMappers.introspection.conditions }}
+      {{- toYaml .Values.texService.preconfiguredMappers.introspection.conditions | nindent 6 }}
+      {{- end }}
+  endpointType: "introspection"
+  mappings:
+    - source: sub
+      target: sub
+    - source: scope
+      target: scope
+    - source: client_id
+      target: client_id
+    - source: exp
+      target: exp
+    - source: aud
+      target: aud
+{{- end }}
+{{- if .Values.texService.preconfiguredMappers.userinfo.enabled }}
+- name: UserInfo
+  url: "{{ .Values.global.oidcProvider.endpoints.userinfo.url }}"
+  request:
+    headers:
+      - key: Authorization
+        value: "Bearer {{`{{`}} .AccessToken {{`}}`}}"
+    {{- if .Values.texService.preconfiguredMappers.userinfo.request.transport }}
+    transport:
+      {{- toYaml .Values.texService.preconfiguredMappers.userinfo.request.transport | nindent 6 }}
+    {{- end }}
+  expectedResponse:
+    statusCodes: [200]
+  preconditions:
+    {{- if .Values.texService.preconfiguredMappers.userinfo.preconditions }}
+    {{- toYaml .Values.texService.preconfiguredMappers.userinfo.preconditions | nindent 4 }}
+    {{- end }}
+  mappings:
+    {{- toYaml .Values.texService.preconfiguredMappers.userinfo.mappings | nindent 4 }}
+{{- end }}
+{{- end -}}

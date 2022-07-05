@@ -1,0 +1,18 @@
+{{- if .Values.traefik.enabled }}
+{{- if and .Values.rbac.enabled (not .Values.rbac.namespaced) }}
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Values.resourceName }}-{{ .Release.Namespace }}
+  labels:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Values.resourceName }}-{{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.resourceName }}
+  namespace: {{ .Release.Namespace }}
+{{end}}
+{{end}}

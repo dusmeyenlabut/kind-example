@@ -1,0 +1,27 @@
+ports:
+  websecure:
+    tls:
+      enabled: false
+
+service:
+  enabled: false
+#   spec:
+#    loadBalancerIP: ""
+
+additionalArguments:
+  - "--entryPoints.web.forwardedHeaders.insecure"
+
+hostNetwork: true
+
+deployment:
+  dnsPolicy: ClusterFirstWithHostNet
+
+ports:
+  web:
+    expose: true
+    port: 80
+    hostPort: 80
+  websecure:
+    expose: true
+    port: 443
+    hostPort: 443

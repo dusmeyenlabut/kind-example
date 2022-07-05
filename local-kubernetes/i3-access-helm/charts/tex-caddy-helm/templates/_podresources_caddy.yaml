@@ -1,0 +1,267 @@
+{{- define "volumes.caddy" -}}
+- name: {{ .Values.resourceName }}-caddyfile
+  configMap:
+    name: {{ .Values.resourceName }}-caddyfile
+- name: {{ .Values.resourceName }}-caddy-config
+  emptyDir: {}
+  {{- if ne .Values.createConfigurationSecrets false }}
+- name: {{ .Values.resourceName }}-secrets
+  secret:
+    secretName: {{ .Values.resourceName }}-secrets
+  {{- end }}
+{{- end -}}
+
+{{- define "volumemounts.caddy" -}}
+  {{- if ne .Values.createConfigurationSecrets false }}
+- name: {{ .Values.resourceName }}-secrets
+  mountPath: /secrets
+  readOnly: true
+  {{- end }}
+{{- end -}}
+
+{{- define "tokenExchange.endpoints.token" -}}
+{{- if .Values.global.tokenExchange.baseURL -}}
+"{{ .Values.global.tokenExchange.baseURL }}/token.oauth2"
+{{- else -}}
+"http://tex-service.{{ .Release.Namespace }}/token.oauth2"
+{{- end -}}
+{{- end -}}
+
+{{- define "tokenExchange.endpoints.jwks" -}}
+{{- if .Values.global.tokenExchange.baseURL -}}
+"{{ .Values.global.tokenExchange.baseURL }}/JWKS"
+{{- else -}}
+"http://tex-service.{{ .Release.Namespace }}/JWKS"
+{{- end -}}
+{{- end -}}
+
+{{- define "containers.caddy" -}}
+{{- $secretName :=  printf "%s-secrets" .Values.resourceName -}}
+- name: tex-caddy
+  image: {{ printf "%s:%s" .Values.image.repository (.Values.image.tag | default  "latest") | quote}}
+  imagePullPolicy: {{ .Values.image.pullPolicy }}
+  command:
+  - "/usr/bin/caddy"
+  - "run"
+  - "-config"
+  - "/etc/caddy/Caddyfile"
+  - "-adapter"
+  - "caddyfile"
+  lifecycle:
+    {{- toYaml .Values.lifecycle | nindent 4 }}
+  env:
+  - name: XDG_CONFIG_HOME
+    value: /etc/caddy-config
+  - name: HOME
+    value: /home/caddy
+  - name: TEX_URL
+    value: {{ include "tokenExchange.endpoints.token" . }}
+  - name: TEX_JWKS_URL
+    value: {{ include "tokenExchange.endpoints.jwks" . }}
+  - name: TEX_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: {{ $secretName }}
+        key: tex.client.id
+  - name: TEX_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: {{ $secretName }}
+        key: tex.client.secret
+  - name: TEX_LOGIN_URL
+    value: {{ .Values.texCaddy.routes.loginUrl }}
+  {{- if .Values.texCaddy.cookies.state.multiple.enabled }}
+  - name: ENABLE_MULTIPLE_STATE_COOKIES
+    value: "true"
+  - name: STATE_COOKIE_EXPIRE
+    value: {{ .Values.texCaddy.cookies.state.multiple.expiry | quote }}
+  {{- end }}
+  - name: TEX_LOGOUT_URL
+    value: {{ .Values.texCaddy.routes.logoutUrl | quote }}
+  - name: TEX_CUSTOM_ERROR_PAGE_URL
+    value: {{ .Values.texCaddy.routes.customErrorPageUrl | quote }}
+  - name: OP_USER_LOGGEDOUT_URL
+    value: {{ .Values.texCaddy.routes.userLoggedOutUrl | quote }}
+  - name: OP_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: {{ $secretName }}
+        key: op.client.id
+  - name: OP_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: {{ $secretName }}
+        key: op.client.secret
+  {{- if ne .Values.global.oidcProviderPreset "github" }}
+  - name: OP_INTROSPECTION_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: {{ $secretName }}
+        key: op.introspection.client.id
+  - name: OP_INTROSPECTION_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: {{ $secretName }}
+        key: op.introspection.client.secret
+  {{- end }}
+  - name: OP_AUTH_URL
+    value: {{ required "No Authorization Endpoint defined for OIDC Provider" .Values.global.oidcProvider.endpoints.authorization.url | quote }}
+  - name: OP_AUTH_REDIRECT_ACR_VALUES
+    value: {{ .Values.global.oidcProvider.endpoints.authorization.additionalQueryParams.acr_values | quote }}
+  - name: OP_ACCEPTED_ACR_VALUES
+    value: {{ .Values.global.oidcProvider.endpoints.authorization.acceptedAcrValues | join "," }}
+  - name: OP_TOKEN_URL
+    value: {{ required "No Token Endpoint defined for OIDC Provider" .Values.global.oidcProvider.endpoints.token.url | quote }}
+    {{- if ne .Values.global.oidcProviderPreset "github" }}
+  - name: OP_INTROSPECTION_URL
+    value: {{ required "No Introspection Endpoint defined for OIDC Provider" .Values.global.oidcProvider.endpoints.introspection.url | quote }}
+    {{- end }}
+  - name: OP_CALLBACK_URL
+    value: {{ .Values.global.oidcProvider.endpoints.authorization.additionalQueryParams.callback_uri | quote }}
+  - name: OP_LOGIN_HINT
+    value: {{ .Values.global.oidcProvider.endpoints.authorization.additionalQueryParams.login_hint | quote }}
+  - name: OP_TOUCHPOINT
+    value: {{ .Values.global.oidcProvider.endpoints.authorization.additionalQueryParams.touchpoint | quote }}
+  - name: OP_REGISTRATION_TRACKING_ID
+    value: {{ .Values.global.oidcProvider.endpoints.authorization.additionalQueryParams.rtid | quote }}
+    {{- if ne .Values.global.oidcProviderPreset "github" }}
+  - name: OP_JWKS_URL
+    value: {{ required "No JWKS Endpoint defined for OIDC Provider" .Values.global.oidcProvider.endpoints.jwks.url | quote }}
+  - name: OP_ISSUER
+    value: {{ required "No Issuer defined for OIDC Provider" .Values.global.oidcProvider.endpoints.jwks.issuer | quote }}
+    {{- end }}
+  - name: OP_ALLOWED_CLOCK_SKEW
+    value: {{ .Values.global.oidcProvider.endpoints.jwks.allowedClockSkew | quote }}
+  - name: LOGLEVEL
+    value: {{ .Values.global.logging.level | upper | quote }}
+  - name: TOKEN_MODE
+    value: {{ .Values.texCaddy.tokenMode | quote }}
+  - name: COOKIE_PATH
+    value: {{ .Values.texCaddy.cookies.tex.path | quote }}
+  - name: COOKIE_REFRESH_TOKEN_TIMEOUT
+    value: {{ .Values.texCaddy.cookies.tex.refreshTokenTimeout | quote }}
+  - name: COOKIE_MAX_AGE
+    value: {{ .Values.texCaddy.cookies.tex.maxAge | quote }}
+  - name: COOKIE_DOMAIN
+    value: {{ .Values.texCaddy.cookies.tex.domain | quote }}
+  - name: COOKIE_SECURE
+    value: {{ .Values.texCaddy.cookies.tex.secure | quote }}
+  - name: COOKIE_HTTP_ONLY
+    value: {{ .Values.texCaddy.cookies.tex.httpOnly | quote }}
+  - name: COOKIE_SAME_SITE_ATTRIBUTE
+    value: {{ .Values.texCaddy.cookies.tex.sameSite | quote }}
+  - name: COOKIE_NAME
+    value: {{ .Values.texCaddy.cookies.tex.name | quote }}
+  - name: OP_LOGOUT_URL
+    value: {{ required "No Logout Endpoint defined for OIDC Provider" .Values.global.oidcProvider.endpoints.logout.url | quote }}
+  - name: OP_LOGOUT_URL_CLIENT_ID_QUERY_PARAM
+    value: {{ .Values.global.oidcProvider.endpoints.logout.additionalQueryParams.client_id | quote }}
+  {{- if .Values.global.oidcProvider.endpoints.logout.additionalQueryParams.TargetResource }}
+  - name: OP_LOGOUT_URL_POST_LOGOUT_REDIRECT_URL
+    value: {{ .Values.global.oidcProvider.endpoints.logout.additionalQueryParams.TargetResource | quote }}
+  {{- else if .Values.global.oidcProvider.endpoints.logout.additionalQueryParams.post_logout_redirect_uri }}
+  - name: OP_LOGOUT_URL_POST_LOGOUT_REDIRECT_URL
+    value: {{ .Values.global.oidcProvider.endpoints.logout.additionalQueryParams.post_logout_redirect_uri | quote }}
+  {{- end }}
+  - name: OP_REVOCATION_URL
+    value: {{ .Values.global.oidcProvider.endpoints.revocation.url | quote }}
+  - name: OP_SCOPES
+    value: {{ .Values.global.oidcProvider.endpoints.authorization.scopes | join "," | quote }}
+  - name: OP_VALIDATE_REFRESH_TOKEN_DELAY
+    value: {{ .Values.global.oidcProvider.validateRefreshTokenDelay | quote }}
+  - name: OP_REFRESH_ACCESS_TOKEN_BEFORE_EXPIRY
+    value: {{ .Values.global.oidcProvider.refreshAccessTokenBeforeExpiry | quote }}
+  {{- include "cookie.keys.secretEnvs" . | nindent 2 }}
+  - name: STATE_COOKIE_NAME
+    value: {{ .Values.texCaddy.cookies.state.name | quote }}
+  - name: IDENTITY_PROVIDER_CONNECTION_TIMEOUT
+    value: {{ .Values.global.oidcProvider.connection.timeout | quote }}
+  - name: TEX_SERVICE_CONNECTION_TIMEOUT
+    value: {{ .Values.global.tokenExchange.connection.timeout | quote }}
+  - name: TEX_SERVICE_CONNECTION_RETRIES
+    value: {{ .Values.global.tokenExchange.connection.retries | quote }}
+  - name: BASE_URL
+    value: {{ .Values.texCaddy.routes.applicationBaseUrl }}
+  {{- if .Values.global.tracing }}
+  - name: JAEGER_SERVICE_NAME
+    value: "caddy.{{.Values.resourceName}}.{{.Release.Namespace}}"
+  {{- range $key, $value :=  .Values.global.tracing }}
+  - name: JAEGER_{{ $key | snakecase | upper }}
+    value: {{ $value | quote }}
+  {{- end }}
+  {{- end }}
+  - name: JWKS_CACHE_TIMEOUT
+    value: {{ .Values.texCaddy.caches.jwks.entriesExpiry | quote }}
+  {{- if .Values.texCaddy.tokenInfo.enabled }}
+  - name: TEX_TOKEN_INFO_ENABLED
+    value: "true"
+  - name: TEX_TOKEN_INFO_URL
+    value: {{ .Values.texCaddy.tokenInfo.url | quote }}
+  {{- end }}
+  {{- if .Values.texCaddy.auth.enabled }}
+  - name: AUTH_ENABLED
+    value: "true"
+  - name: AUTH_REDIRECT_ON_TOKEN_REFRESH
+    value: {{ .Values.texCaddy.auth.redirectOnTokenRefresh | quote }}
+  - name: AUTH_UI_PATH
+    value: {{ .Values.texCaddy.auth.path.ui | quote }}
+  - name: AUTH_API_PATH
+    value: {{ .Values.texCaddy.auth.path.api | quote }}
+  - name: AUTH_PATH
+    value: {{ .Values.texCaddy.auth.path.auth | quote }}
+  - name: AUTH_SIGNIN_PATH
+    value: {{ .Values.texCaddy.auth.path.signIn | quote }}
+  {{- end }}
+  {{- if .Values.extra.envs  }}
+  {{- toYaml .Values.extra.envs | nindent 2 }}
+  {{- end }}
+  ports:
+    - name: http
+      containerPort: 9080
+      protocol: TCP
+    - name: https
+      containerPort: 9443
+      protocol: TCP
+    {{- if .Values.global.metrics.enabled }}
+    - name: metrics
+      containerPort: 9092
+      protocol: TCP
+    {{- end }}
+  readinessProbe:
+    {{- if .Values.texCaddy.probes.readiness }}
+    {{- toYaml .Values.texCaddy.probes.readiness | nindent 4 }}
+    {{- else }}
+    httpGet:
+      path: /health
+      port: 9091
+    {{- end }}
+  livenessProbe:
+    {{- if .Values.texCaddy.probes.liveness }}
+    {{- toYaml .Values.texCaddy.probes.liveness | nindent 4 }}
+    {{- else }}
+    tcpSocket:
+      port: 9091
+    initialDelaySeconds: 10
+    timeoutSeconds: 5
+    {{- end }}
+  {{- if .Values.texCaddy.securityContext }}
+  securityContext:
+    {{- toYaml .Values.texCaddy.securityContext | nindent 4 }}
+  {{- end }}
+  {{- if .Values.texCaddy.resources }}
+  resources:
+    {{- toYaml .Values.texCaddy.resources | nindent 4 }}
+  {{- end }}
+  volumeMounts:
+    - name: {{ .Values.resourceName }}-caddyfile
+      mountPath: /etc/caddy
+      readOnly: true
+    - name: {{ .Values.resourceName }}-caddy-config
+      mountPath: /etc/caddy-config
+      readOnly: false
+    {{- include "volumemounts.caddy" . | nindent 4 }}
+    {{- include "tls.volumeMounts" . | nindent 4 }}
+    {{- if .Values.extra.volumeMounts  }}
+    {{- toYaml .Values.extra.volumeMounts | trim | nindent 4 }}
+    {{- end }}
+{{- end -}}

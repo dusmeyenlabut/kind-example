@@ -1,0 +1,152 @@
+{{- define "oidcProvider.presets" -}}
+
+{{- $preset := .Values.global.oidcProviderPreset -}}
+{{- $endpoints := .Values.global.oidcProvider.endpoints -}}
+
+{{- if eq $preset "gased-int" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://sso-int.mercedes-benz.com/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://sso-int.mercedes-benz.com/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://sso-int.mercedes-benz.com/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://sso-int.mercedes-benz.com/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://sso-int.mercedes-benz.com/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://sso-int.mercedes-benz.com/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://sso-int.mercedes-benz.com" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://sso-int.mercedes-benz.com/idp/userinfo.openid" -}}
+{{- else if eq $preset "gased-prod" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://sso.mercedes-benz.com/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://sso.mercedes-benz.com/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://sso.mercedes-benz.com/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://sso.mercedes-benz.com/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://sso.mercedes-benz.com/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://sso.mercedes-benz.com/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://sso.mercedes-benz.com" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://sso.mercedes-benz.com/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-cn-int" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://ciam-int-1.mercedes-benz.com.cn/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://ciam-int-1.mercedes-benz.com.cn/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://ciam-int-1.mercedes-benz.com.cn/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://ciam-int-1.mercedes-benz.com.cn/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://ciam-int-1.mercedes-benz.com.cn/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://ciam-int-1.mercedes-benz.com.cn/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://ciam-int-1.mercedes-benz.com.cn" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://ciam-int-1.mercedes-benz.com.cn/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-cn-preprod" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://ciam-pre-1.mercedes-benz.com.cn/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://ciam-pre-1.mercedes-benz.com.cn/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://ciam-pre-1.mercedes-benz.com.cn/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://ciam-pre-1.mercedes-benz.com.cn/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://ciam-pre-1.mercedes-benz.com.cn/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://ciam-pre-1.mercedes-benz.com.cn/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://ciam-pre-1.mercedes-benz.com.cn" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://ciam-pre-1.mercedes-benz.com.cn/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-cn-prod" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://ciam-1.mercedes-benz.com.cn/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://ciam-1.mercedes-benz.com.cn/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://ciam-1.mercedes-benz.com.cn/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://ciam-1.mercedes-benz.com.cn/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://ciam-1.mercedes-benz.com.cn/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://ciam-1.mercedes-benz.com.cn/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://ciam-1.mercedes-benz.com.cn" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://ciam-1.mercedes-benz.com.cn/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-emea-int" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://id-int.mercedes-benz.com/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://id-int.mercedes-benz.com/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://id-int.mercedes-benz.com/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://id-int.mercedes-benz.com/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://id-int.mercedes-benz.com/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://id-int.mercedes-benz.com/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://id-int.mercedes-benz.com" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://id-int.mercedes-benz.com/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-emea-preprod" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://id-pre-1.mercedes-benz.com/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://id-pre-1.mercedes-benz.com/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://id-pre-1.mercedes-benz.com/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://id-pre-1.mercedes-benz.com/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://id-pre-1.mercedes-benz.com/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://id-pre-1.mercedes-benz.com/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://id-pre-1.mercedes-benz.com" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://id-pre-1.mercedes-benz.com/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-emea-prod" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://id.mercedes-benz.com/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://id.mercedes-benz.com/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://id.mercedes-benz.com/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://id.mercedes-benz.com/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://id.mercedes-benz.com/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://id.mercedes-benz.com/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://id.mercedes-benz.com" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://id.mercedes-benz.com/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-cn-int-intra" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://ciam-int-1.mercedes-benz.com.cn/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://id-cn-int-1.iam.corpintra.net/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://id-cn-int-1.iam.corpintra.net/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://id-cn-int-1.iam.corpintra.net/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://ciam-int-1.mercedes-benz.com.cn/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://id-cn-int-1.iam.corpintra.net/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://ciam-int-1.mercedes-benz.com.cn" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://id-cn-int-1.iam.corpintra.net/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-cn-preprod-intra" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://ciam-pre-1.mercedes-benz.com.cn/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://id-cn-pre-1.iam.corpintra.net/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://id-cn-pre-1.iam.corpintra.net/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://id-cn-pre-1.iam.corpintra.net/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://ciam-pre-1.mercedes-benz.com.cn/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://id-cn-pre-1.iam.corpintra.net/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://ciam-pre-1.mercedes-benz.com.cn" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://id-cn-pre-1.iam.corpintra.net/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-cn-prod-intra" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://ciam-1.mercedes-benz.com.cn/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://id-cn-1.iam.corpintra.net/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://id-cn-1.iam.corpintra.net/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://id-cn-1.iam.corpintra.net/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://ciam-1.mercedes-benz.com.cn/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://id-cn-1.iam.corpintra.net/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://ciam-1.mercedes-benz.com.cn" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://id-cn-1.iam.corpintra.net/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-emea-int-intra" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://id-int.mercedes-benz.com/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://id-emea-int-1.iam.corpintra.net/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://id-emea-int-1.iam.corpintra.net/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://id-emea-int-1.iam.corpintra.net/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://id-int.mercedes-benz.com/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://id-emea-int-1.iam.corpintra.net/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://id-int.mercedes-benz.com" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://id-emea-int-1.iam.corpintra.net/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-emea-preprod-intra" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://id-pre-1.mercedes-benz.com/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://id-emea-pre-1.iam.corpintra.net/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://id-emea-pre-1.iam.corpintra.net/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://id-emea-pre-1.iam.corpintra.net/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://id-pre-1.mercedes-benz.com/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://id-emea-pre-1.iam.corpintra.net/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://id-pre-1.mercedes-benz.com" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://id-emea-pre-1.iam.corpintra.net/idp/userinfo.openid" -}}
+{{- else if eq $preset "ciam-emea-prod-intra" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://id.mercedes-benz.com/as/authorization.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://id-emea-1.iam.corpintra.net/as/token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.introspection "url" "https://id-emea-1.iam.corpintra.net/as/introspect.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.revocation "url" "https://id-emea-1.iam.corpintra.net/as/revoke_token.oauth2" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://id.mercedes-benz.com/idp/startSLO.ping" -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "url" "https://id-emea-1.iam.corpintra.net/pf/JWKS" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+{{- set .Values.global.oidcProvider.endpoints.jwks "issuer" "https://id.mercedes-benz.com" -}}
+{{- set .Values.global.oidcProvider.endpoints.userinfo "url" "https://id-emea-1.iam.corpintra.net/idp/userinfo.openid" -}}
+{{- else if eq $preset "github" -}}
+{{- set .Values.global.oidcProvider.endpoints.authorization "url" "https://git.daimler.com/login/oauth/authorize" -}}
+{{- set .Values.global.oidcProvider.endpoints.token "url" "https://git.daimler.com/login/oauth/access_token" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout "url" "https://git.daimler.com/logout" -}}
+{{- set .Values.global.oidcProvider.endpoints.logout.additionalQueryParams "client_id" `{{ .clientID }}` -}}
+
+{{- end -}}
+
+{{- end -}}

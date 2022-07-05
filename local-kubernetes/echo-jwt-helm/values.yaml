@@ -1,0 +1,145 @@
+resourceName: "echo-jwt"
+replicas: "1"
+# Optionally specify additional annotations for echo-jwt deployment
+#annotations:
+
+image:
+  repository: registry.app.corpintra.net/i3/echo-jwt
+  tag: 4.8.0
+  imagePullPolicy: IfNotPresent
+# Optionally specify an array of imagePullSecrets.
+# Secrets must be manually created in the namespace.
+#imagePullSecrets:
+#- name: secret-1
+echoJwt:
+  # jwks url
+  jwksUrl: "http://tex-service/JWKS"
+  # Must match the jwt claim 'iss' set in i3-tex-service for validation
+  issuer: "http://tex-service"
+  basePath: ""
+  #httpNodePort:
+  # # Uncomment and adjust I3TRACING_NAMESPACE to enable tracing
+  # # See here for configuration details: https://echo.labstack.com/middleware/jaegertracing
+  tracing:
+    enabled: false
+    environment:
+      JAEGER_SERVICE_NAME: echo-jwt
+      #JAEGER_AGENT_HOST: i3-tracing-jaeger-agent.<REPLACE_I3TRACING_NAMESPACE>.svc.cluster.local
+      #JAEGER_AGENT_PORT: 6831
+      JAEGER_SAMPLER_TYPE: probabilistic
+      JAEGER_SAMPLER_PARAM: 0.1
+  # If you don't want to expose the echo-jwt application endpoint, e.g. if using a sidecar container like i3-jwt-proxy, set this to false.
+  endpoint:
+    exposed: true
+
+# defines the requested and max memory for echo-jwt service
+resources:
+  limits:
+    memory: 200M
+  requests:
+    memory: 100M
+
+# defines security context. By default, we have a read only file system
+securityContext:
+  readOnlyRootFilesystem: true
+
+ingress:
+  enabled: false
+  # Both the host and path must match the content of an incoming request before traffic is routed to echo-jwt
+  host: REPLACEME
+  path: /
+  # Additional labels for ingresses. They can for example be used for a labelselector of an ingress controller
+  #labels:
+  # Annotations for ingresses. They can for example be used to define kubernetes.io/ingress.class for an ingress controller
+  #annotations:
+  # Name of the IngressClass to assign this ingress to an ingress controller
+  #ingressClassName:
+  tls:
+    enabled: false
+    secretName: "ingress-certs"
+
+networkPolicy:
+  enabled: false
+  port: 8080
+
+## Add additional container in extraContainers. This might be used for example to add a i3-jwt-proxy sidecar.
+extraContainers: ""
+# extraContainers: |
+#  - name: i3-jwt-proxy
+#    image: registry.app.corpintra.net/i3-snapshot/i3-jwt-proxy:2.3.2-i3-7998-caddy-2-documentation-20220208.42f7213
+#    imagePullPolicy: IfNotPresent
+#    env:
+#      - name: JWKS_URL
+#        value: http://tex-service/JWKS
+#      # Must match the jwt claim 'iss' set in i3-tex-service for validation
+#      - name: ISSUER
+#        value: http://tex-service
+#      - name: XDG_CONFIG_HOME
+#        value: /etc/caddy-config
+#    volumeMounts:
+#      - name: i3-jwt-proxy-caddyfile
+#        mountPath: /etc/caddy
+#      - name: i3-jwt-proxy-caddy-config
+#        mountPath: /etc/caddy-config
+#        readOnly: false
+#    resources:
+#      limits:
+#        memory: "128Mi"
+#        cpu: "500m"
+#    ports:
+#      - containerPort: 8090
+#        name: http
+#        protocol: TCP
+#    livenessProbe:
+#      tcpSocket:
+#        port: http
+#      initialDelaySeconds: 1
+#      timeoutSeconds: 5
+#    readinessProbe:
+#      tcpSocket:
+#        port: http
+#      initialDelaySeconds: 3
+
+## Volumes that can be used in extra containers
+extraContainerVolumes: []
+#  - name: i3-jwt-proxy-caddyfile
+#    configMap:
+#      name: i3-jwt-proxy-caddyfile
+#  - name: i3-jwt-proxy-caddy-config
+#    emptyDir: {}
+
+# Create extra k8s object such as config maps used by extraContainerVolumes:
+extraObjects: []
+#  - apiVersion: v1
+#    kind: ConfigMap
+#    metadata:
+#      name: i3-jwt-proxy-caddyfile
+#    data:
+#      Caddyfile: |
+#        (log_configuration) {
+#          log {
+#            level DEBUG
+#            format console  {
+#                time_key time
+#                time_format 2006-01-02T15:04:05.000Z
+#            }
+#          }
+#        }
+#        {
+#            order jwt-proxy before respond
+#            admin off
+#            import log_configuration
+#        }
+#
+#        :8090 {
+#            root * /dev/null
+#
+#            import log_configuration
+#
+#            jwt-proxy {
+#                jwt  {
+#                    paths /testapp/ui /testapp/api
+#                }
+#            }
+#            reverse_proxy /* http://127.0.0.1:8080
+#        }

@@ -1,0 +1,28 @@
+#
+# NetworkPolicy Declaration
+#
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ .Values.resourceName }}-access
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "texCaddy.defaultLabels" . | nindent 6 }}
+  ingress:
+  - ports:
+    - port: 9080
+      protocol: TCP
+    - port: 9443
+      protocol: TCP
+    {{- if .Values.global.metrics.enabled }}
+    - port: 9092
+      protocol: TCP
+    {{- if .Values.traefik.enabled }}
+    - port: 8081
+      protocol: TCP
+    {{- end }}
+    {{- end }}

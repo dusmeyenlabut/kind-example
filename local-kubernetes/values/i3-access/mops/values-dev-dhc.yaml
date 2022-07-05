@@ -1,0 +1,16 @@
+mops:
+  name: "mops"
+  replicas: 1
+  logLevel: INFO
+  basePath: /mock-op
+  dozyUser: dozy.user
+
+ingress:
+  enabled: true
+  host: st1.mo360mes-dev.app.corpintra.net
+  path: /mock-op
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+  tls:
+    enabled: true
+    secretName: "st1.mo360mes-dev-tls-secret"

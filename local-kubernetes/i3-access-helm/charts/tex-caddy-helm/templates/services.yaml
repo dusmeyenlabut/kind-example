@@ -1,0 +1,109 @@
+{{- $_ := include "migrate.texCaddy" . -}}
+#
+# Service Declaration
+#
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.resourceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+    {{- if .Values.labels.service }}
+    {{- toYaml .Values.labels.service | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- if .Values.annotations.service }}
+    {{- toYaml .Values.annotations.service | nindent 4 }}
+    {{- end }}
+spec:
+{{- with .Values.inbound.service }}
+  type: {{ .type }}
+{{- if eq .type "LoadBalancer" }}
+  loadBalancerIP: {{ .loadBalancer.ip }}
+{{- end }}
+{{- if .loadBalancer.sourceRanges }}
+  loadBalancerSourceRanges:
+  {{- range .loadBalancer.sourceRanges }}
+  - {{ . }}
+  {{- end }}
+{{- end }}
+{{- end }}
+  selector:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+    {{- if .Values.labels.service }}
+    {{- toYaml .Values.labels.service | nindent 4 }}
+    {{- end }}
+  ports:
+  {{- toYaml .Values.inbound.service.ports | nindent 2 }}
+
+{{- if .Values.global.metrics.enabled }}
+---
+#
+# Headless service for scraping tex-caddy metrics
+#
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.resourceName }}-metrics-caddy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+    {{- if .Values.labels.service }}
+    {{- toYaml .Values.labels.service | nindent 4 }}
+    {{- end }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9092"
+    prometheus.io/path: "/metrics"
+    {{- if .Values.annotations.service }}
+    {{- toYaml .Values.annotations.service | nindent 4 }}
+    {{- end }}
+spec:
+  clusterIP: "None"
+  ports:
+  - name: metrics-caddy
+    port: 9092
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+    {{- if .Values.labels.service }}
+    {{- toYaml .Values.labels.service | nindent 4 }}
+    {{- end }}
+---
+{{- if .Values.traefik.enabled }}
+#
+# Headless service for scraping traefik metrics
+#
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.resourceName }}-metrics-traefik
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+    {{- if .Values.labels.service }}
+    {{- toYaml .Values.labels.service | nindent 4 }}
+    {{- end }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8081"
+    prometheus.io/path: "/metrics"
+    {{- if .Values.annotations.service }}
+    {{- toYaml .Values.annotations.service | nindent 4 }}
+    {{- end }}
+spec:
+  clusterIP: "None"
+  ports:
+  - name: metrics-traefik
+    port: 8081
+    targetPort: metrics-traefik
+    protocol: TCP
+  selector:
+    {{- include "texCaddy.defaultLabels" . | nindent 4 }}
+    {{- if .Values.labels.service }}
+    {{- toYaml .Values.labels.service | nindent 4 }}
+    {{- end }}
+{{- end }}
+{{- end }}

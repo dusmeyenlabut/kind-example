@@ -1,0 +1,106 @@
+global:
+  tokenExchange:
+    credentials:
+      clientID: "username"
+      clientSecret: "password"
+  oidcProvider:
+    clientCredentials:
+      authCode:
+        clientID: client_id
+        clientSecret: client_secret
+      tokenIntrospection:
+        clientID: introspection_client_id
+        clientSecret: introspection_client_secret
+    endpoints:
+      authorization:
+        url: "https://st1.mo360mes-dev.app.corpintra.net/mock-op/authorization.oauth2"
+      token:
+        url: "http://mops/mock-op/token.oauth2"
+      introspection:
+        url: "http://mops/mock-op/introspect.oauth2"
+      revocation:
+        url: "http://mops/mock-op/revoke_token.oauth2"
+      jwks:
+        url: "http://mops/mock-op/JWKS"
+        issuer: "http://mops"
+      logout:
+        url: "https://st1.mo360mes-dev.app.corpintra.net/mock-op/startSLO.ping"
+        additionalQueryParams:
+          client_id: ""
+          post_logout_redirect_uri: ""
+      userinfo:
+        url: "http://mops/mock-op/userinfo.openid"
+
+tex-caddy-helm:
+  texCaddy:
+    routes:
+      applicationBaseUrl: "https://st1.mo360mes-dev.app.corpintra.net"
+
+tex-service-helm:
+  texService:
+    jwt:
+      issuer: http://tex-service
+    preconfiguredMappers:
+      introspection:
+        enabled: true
+        conditions:
+          - key: "client_id"
+            values: [ "client_id" ]
+          - key: "aud"
+            values: [ "client_id" ]
+      userinfo:
+        enabled: true
+        preconditions:
+          - key: "scope"
+            expression: "{{ splitList \" \" . | has \"openid\" }}"
+          - key: "sub"
+            expression: "{{ not (empty .) }}"
+        mappings:
+          - source: name
+            target: name
+          - source: given_name
+            target: given_name
+          - source: family_name
+            target: family_name
+          - source: email
+            target: email
+          - source: authorization_group
+            target: authorization_group
+          - source: entitlement_group
+            target: entitlement_group
+          - source: sub
+            target: upn
+    mappers:
+      - name: "static mapper"
+        url: ""
+        mappings:
+          - value: "AUTH_GROUP"
+            target: authorization_group
+      - name: "dynamic mapper"
+        url: ""
+        mappings:
+          - values:
+              - MO360MES.e_BOM_Stueckliste_Create
+              - MO360MES.e_BOM_Stueckliste_Read
+              - MO360MES.e_BOM_Stueckliste_Update
+              - MO360MES.e_BOM_Stueckliste_Delete
+              - MO360MES.e_BOM_Buendel_Create
+              - MO360MES.e_BOM_Buendel_Read
+              - MO360MES.e_BOM_Buendel_Update
+              - MO360MES.e_BOM_Buendel_Delete
+              - MO360MES.e_PMD_Stammdaten_Create
+              - MO360MES.e_PMD_Stammdaten_Read
+              - MO360MES.e_PMD_Stammdaten_Update
+              - MO360MES.e_PMD_Stammdaten_Delete
+              - MO360MES.e_LNC_Konfiguration_Create
+              - MO360MES.e_LNC_Konfiguration_Read
+              - MO360MES.e_LNC_Konfiguration_Update
+              - MO360MES.e_LNC_Konfiguration_Delete
+              - MO360MES.e_LNC_Konfiguration_Activate
+              - MO360MES.e_LNC_Konfiguration_Derive
+              - MO360MES.e_GBL_User
+              - MO360MES.e_REP_Export_Download
+            target: entitlement_group
+            condition: '{{ contains "super" .sub }}'
+            append: true
+

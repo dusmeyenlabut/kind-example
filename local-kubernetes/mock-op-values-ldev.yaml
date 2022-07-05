@@ -1,0 +1,150 @@
+mops:
+  basePath: /mock-op
+ingress:
+  enabled: true
+  host: st1.mo360mes.localhost
+  path: /mock-op
+  # annotations:
+  #   kubernetes.io/ingress.class: "nginx"
+  tls:
+    enabled: false
+    secretName: "ingress-certs"
+##
+# Configuration section for global values (those values are the same for i3-tex-caddy and i3-tex-service)
+global:
+  # Configuration for token exchange connection between i3-tex-caddy and i3-tex-service
+  tokenExchange:
+    credentials:
+      # Client id for basic authentication of token exchange clients. This value is mandatory.
+      clientID: "username"
+      # Client secret for basic authentication of token exchange clients. This value is mandatory.
+      clientSecret: "password"
+  oidcProvider:
+    clientCredentials:
+      authCode:
+        # Client id for the connection to the OIDC provider. This value is mandatory.
+        clientID: client_id
+        # Client secret for the connection to the OIDC provider. This value is mandatory.
+        clientSecret: client_secret
+      tokenIntrospection:
+        # Client id for the introspection endpoint of the OIDC provider
+        clientID: introspection_client_id
+        # Client secret for the introspection endpoint of the OIDC provider
+        clientSecret: introspection_client_secret
+    endpoints:
+      authorization:
+        url: "http://st1.mo360mes.localhost/mock-op/authorization.oauth2"
+      token:
+        url: "http://mops/mock-op/token.oauth2"
+      introspection:
+        url: "http://mops/mock-op/introspect.oauth2"
+      revocation:
+        url: "http://mops/mock-op/revoke_token.oauth2"
+      jwks:
+        url: "http://mops/mock-op/JWKS"
+        issuer: "http://mops"
+      logout:
+        url: "http://st1.mo360mes.localhost/mock-op/startSLO.ping"
+        additionalQueryParams:
+          client_id: ""
+          post_logout_redirect_uri: ""
+      userinfo:
+        url: "http://mops/mock-op/userinfo.openid"
+
+##
+# Configuration section for tex-caddy helm subchart.
+# We've listed mandatory and most commonly used properties.
+# For configuration details see values.yaml of tex-caddy (charts/tex-caddy-helm/values.yaml)
+tex-caddy-helm:
+  texCaddy:
+    routes:
+      applicationBaseUrl: "http://st1.mo360mes.localhost"
+
+# Configuration section for tex-service helm subchart.
+# We've listed mandatory and most commonly used properties.
+# For configuration details see values.yaml of tex-service (charts/tex-service-helm/values.yaml)
+tex-service-helm:
+  texService:
+    jwt:
+      issuer: http://tex-service
+    preconfiguredMappers:
+      introspection:
+        enabled: true
+        conditions:
+          - key: "client_id"
+            values: [ "client_id" ]
+          - key: "aud"
+            values: [ "client_id" ]
+      userinfo:
+        enabled: true
+        preconditions:
+          - key: "scope"
+            expression: "{{ splitList \" \" . | has \"openid\" }}"
+          - key: "sub"
+            expression: "{{ not (empty .) }}"
+        mappings:
+          - source: name
+            target: name
+          - source: given_name
+            target: given_name
+          - source: family_name
+            target: family_name
+          - source: email
+            target: email
+          - source: authorization_group
+            target: authorization_group
+          - source: entitlement_group
+            target: entitlement_group
+          - source: sub
+            target: upn
+    #cache:
+    #  disabled: true
+    mappers:
+      - name: "static mapper"
+        url: ""
+        mappings:
+          - value: "AUTH_GROUP"
+            target: authorization_group
+      - name: "dynamic mapper"
+        url: ""
+        mappings:
+          - values:
+              - MBFS.QUALITY_Quality_Group_WRITE
+              - MBFS.SHOPFLOOR_Production_Line_WRITE
+              - MBFS.ORDER_Receiver_Type_READ
+              - MBFS.SHOPFLOOR_Production_Line_WRITE
+              - MBFS.ORDER_Part_Number_Type_WRITE
+              - MBFS.ORDER_Receiver_Type_WRITE
+              - MBFS.SHOPFLOOR_Checkpoint_Receiver_List_Config_WRITE
+              - MBFS.SHOPFLOOR_Checkpoint_WRITE
+              - MBFS.SHOPFLOOR_Ident_Type_WRITE
+              - MBFS.SHOPFLOOR_Quality_Gate_WRITE
+              - MBFS.SHOPFLOOR_Carrier_Type_WRITE
+              - MBFS.SHOPFLOOR_Workpiece_Position_WRITE
+              - MBFS.SHOPFLOOR_Attribute_WRITE
+              - MBFS.SHOPFLOOR_Attribute_Part_Config_WRITE
+              - MBFS.SHOPFLOOR_Job_Number_Config_WRITE
+              - MBFS.SHOPFLOOR_Message_Receiver_Distribution_WRITE
+              - MBFS.SHOPFLOOR_Checkpoint_Config_WRITE
+              - MBFS.SHOPFLOOR_Station_Config_WRITE
+              - MBFS.SHOPFLOOR_Channel_Config_WRITE
+              - MBFS.PRODUCT_Checkpoint_Date_Rule_Config_WRITE
+              - MBFS.PRODUCT_Event_WRITE
+              - MBFS.PRODUCT_Message_Rule_Config_WRITE
+              - MBFS.PRODUCT_Plausibility_Rule_Config_WRITE
+              - MBFS.PRODUCT_Target_Printer_Config_WRITE
+              - MBFS.PRODUCT_Printer_Config_WRITE
+              - MBFS.PRODUCT_Print_Product_WRITE
+              - MBFS.PRODUCT_Print_Label_Type_WRITE
+              - MBFS.PRODUCT_Product_Deletion_WRITE
+              - MBFS.QUALITY_Quality_Type_WRITE
+              - MBFS.QUALITY_Quality_Ident_Name_WRITE
+              - MBFS.QUALITY_Quality_Rule_Config_WRITE
+              - MBFS.QUALITY_Quality_Requirement_Config_WRITE
+              - MBFS.QUALITY_Quality_Type_Ident_Name_Relation_WRITE
+              - MBFS.CAMPAIGN_Campaign_Rule_Config_WRITE
+              - MBFS.TRANSPORT_Target_Steering_WRITE
+              - MBFS.WORKER_UI_Worker_WRITE
+            target: entitlement_group
+            condition: '{{ contains "super" .sub }}'
+            append: true

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.resourceName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "echojwt.defaultLabels" . | nindent 4 }}
+spec:
+{{- if .Values.echoJwt.httpNodePort }}
+  type: NodePort
+{{- end }}
+  selector:
+    name: {{ .Values.resourceName }}
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 4 }}
+{{- end }}
+  ports:
+  - name: http
+{{- if .Values.echoJwt.httpNodePort }}
+    nodePort: {{ .Values.echoJwt.httpNodePort }}
+{{- end }}
+    port: 80
+    targetPort: http

@@ -1,0 +1,52 @@
+{{- define "caddyfile.addressblocks" -}}
+  {{- if .Values.texCaddy.caddyfile.tls.enabled -}}
+:9080 {
+  import configuration
+}
+:9443 {
+  import configuration
+  {{ include "caddyfile.tls.directive" . }}
+}
+  {{- else -}}
+:9080 {
+  import configuration
+}
+  {{- end -}}
+{{- end -}}
+
+
+{{- define "caddyfile.headers" -}}
+{{- range $header := .Values.texCaddy.caddyfile.headers }}
+header {{ $header.path }} {
+  {{- range $setting := $header.settings }}
+    {{- if $setting.remove }}
+  -{{ $setting.name }}
+    {{- else }}
+      {{- if $setting.replacement }}
+  {{ $setting.name }} {{ $setting.value | quote }} {{ $setting.replacement | quote }}
+      {{- else }}
+  +{{ $setting.name }} {{ $setting.value | quote }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+}
+{{- end }}
+{{- end -}}
+
+
+{{- define "caddyfile.tls.globals" -}}
+  {{- if .Values.texCaddy.caddyfile.tls.enabled -}}
+https_port 9443
+    {{- if not (empty .Values.texCaddy.caddyfile.tls.defaultSNI) }}
+default_sni {{ .Values.texCaddy.caddyfile.tls.defaultSNI }}
+    {{- else }}
+default_sni ingress.{{.Release.Namespace}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- define "caddyfile.tls.directive" -}}
+  {{- if .Values.texCaddy.caddyfile.tls.enabled -}}
+tls /etc/ingress-cert/tls.crt /etc/ingress-cert/tls.key
+  {{- end -}}
+{{- end -}}

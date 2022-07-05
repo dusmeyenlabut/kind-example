@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dockerhost
+  labels:
+    k8s-app: dockerhost
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: dockerhost
+  template:
+    metadata:
+      labels:
+        k8s-app: dockerhost
+    spec:
+      containers:
+        - name: dockerhost
+          image: qoomon/docker-host:3.0.3
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN", "NET_RAW"]
+          env:
+            - name: DOCKER_HOST
+              value: 172.18.0.1
+            - name: PORTS
+              value: '3000, 9000-9400'
