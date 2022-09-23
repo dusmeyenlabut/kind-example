@@ -1,0 +1,9 @@
+prometheus:
+  additionalScrapeConfigs:
+    enabled: true
+    type: internal
+    internal:
+      jobList:
+      - job_name: 'nginx-prometheus-exporter'
+        static_configs:
+         - targets: ['nginx-prometheus-exporter:9113']

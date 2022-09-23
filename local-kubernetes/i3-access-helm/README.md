@@ -1,1 +1,0 @@
-See [README.md](https://git.daimler.com/i3/i3-access/blob/master/docs/README.md) and [Terms of Use](https://git.daimler.com/i3/i3-access/blob/master/README.md#terms-of-use). Want to know more about I³? See [https://pages.git.daimler.com/i3/welcome/](https://pages.git.daimler.com/i3/welcome/).
