@@ -2,7 +2,7 @@
 ## About The Project
 
 <div align="left">
-  <a href="https://github.com/bingolburak/kind-example">
+  <a href="https://mr-script.com">
     <img src="images/logo.png" alt="Logo" width="80" height="140">
   </a>
 
