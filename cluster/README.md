@@ -1,7 +1,7 @@
 
 ### Installation
 
-1. Get the kind command line [https://kind.sigs.k8s.io/](here)
+1. Get the kind command line [here](https://kind.sigs.k8s.io/)
 2. Clone the repo
    ```sh
    git clone https://github.com/bingolburak/kind-example.git

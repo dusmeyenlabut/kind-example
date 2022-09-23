@@ -6,7 +6,7 @@
     <img src="images/logo.png" alt="Logo" width="80" height="140">
   </a>
 
-  <h3 align="center"><a href="mr-script.com">Mr Script</a></h3>
+  <h3 align="center"><a href="https://mr-script.com">Mr Script</a></h3>
 </div>
 
 Which "How to"s you can find this repo?
