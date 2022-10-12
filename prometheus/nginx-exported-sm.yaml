@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: wipo-prom-exporter-nginx #name target
+  namespace: monitoring #namespace when deployed
+spec:
+  endpoints:
+    - targetPort: 9113 #port of pod
+      path: '/metrics' #endpoint where metrics already exists
+      scheme: http #
+      interval: 15s #
+      params:
+        module:
+        - http_2xx
+        target:
+        - https://www.example.com
+      relabelings:
+        - sourceLabels: [__param_target]
+          targetLabel: target
+  selector:
+    matchLabels: {} #empty to get all labels
+  namespaceSelector:
+    matchNames:
+      - "app" #namespace where applications are running
